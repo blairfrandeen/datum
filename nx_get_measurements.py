@@ -10,6 +10,7 @@ a measurement has more than one value, such as a surface area measurement.
 
 TODO: Set this up to just grab all measurements and dump them in a JSON
 """
+from tkinter import W
 import NXOpen
 import NXOpen.Features
 import csv
@@ -27,6 +28,25 @@ def find_feature_by_name(feature_name):
             return feature
 
     return None
+
+def export_measurements():
+    nxSession = NXOpen.Session.GetSession()
+    #   Ensure that measruements are updated in the model
+    #   Menu: Tools->Update->Interpart Update->Update All
+    markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
+    nxSession.UpdateManager.DoInterpartUpdate(markId2)
+    
+    workPart = nxSession.Parts.Work
+    for feature in workPart.Features:
+        if "MEASUREMENT" in feature.FeatureType:
+            nxprint(f'{feature.Name}')
+            for expr in feature.GetExpressions():
+                try:
+                    nxprint(f'{expr.Description} - {expr.Value} [{expr.Units.Name}]')
+                    nxprint(f'{expr.IsMeasurementExpression}, {expr.Name}, {expr.Tag}, {expr.Type}')
+                except:
+                    continue
+
 
 def update_measurements(measurement_database):
     theSession  = NXOpen.Session.GetSession()
@@ -71,8 +91,9 @@ def main():
     workPart = theSession.Parts.Work
     nxprint("Measurement Extractor. Using Pythong Version:")
     nxprint(sys.version)
-    find_feature_by_name("SURFACE_AREA_PAINTED")
-    update_measurements("C:/Users/frandeen/Documents/NX_Journals/measurements.csv")
+    # find_feature_by_name("SURFACE_AREA_PAINTED")
+    # update_measurements("C:/Users/frandeen/Documents/NX_Journals/measurements.csv")
+    export_measurements()
 
 if __name__ == '__main__':
     main()
