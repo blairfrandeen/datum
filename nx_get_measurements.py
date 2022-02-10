@@ -12,10 +12,10 @@ TODO: Set this up to just grab all measurements and dump them in a JSON
 """
 from tkinter import W
 import NXOpen
-import NXOpen.Features
 import csv
 import sys
 import json
+import re
 from nxmods import nxprint
 
 
@@ -29,24 +29,40 @@ def find_feature_by_name(feature_name):
 
     return None
 
-def export_measurements():
-    nxSession = NXOpen.Session.GetSession()
+def export_measurements(nxSession=None):
     #   Ensure that measruements are updated in the model
     #   Menu: Tools->Update->Interpart Update->Update All
-    markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
-    nxSession.UpdateManager.DoInterpartUpdate(markId2)
+    if nxSession:
+        markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
+        nxSession.UpdateManager.DoInterpartUpdate(markId2)
+        workPart = nxSession.Parts.Work
     
-    workPart = nxSession.Parts.Work
+    num_measurements_found = 0
+    measurement_features = []
     for feature in workPart.Features:
         if "MEASUREMENT" in feature.FeatureType:
-            nxprint(f'{feature.Name}')
+            num_measurements_found += 1
+            # nxprint(f'{feature.Name}')
+            current_feature = {'name': feature.Name,\
+                'expressions': []}
             for expr in feature.GetExpressions():
                 try:
-                    nxprint(f'{expr.Description} - {expr.Value} [{expr.Units.Name}]')
-                    nxprint(f'{expr.IsMeasurementExpression}, {expr.Name}, {expr.Tag}, {expr.Type}')
-                except:
-                    continue
+                    current_expr = {\
+                        # 'type': re.search('(?<=\d\) )\w+(?=\))',expr.Description),
+                        'type': expr.Description,
+                        'value': expr.Value,
+                        'units': expr.Units.Name }
+                    # nxprint(f'{expr.Description} - {expr.Value} [{expr.Units.Name}]')
+                    # nxprint(f'{expr.IsMeasurementExpression}, {expr.Name}, {expr.Tag}, {expr.Type}')
+                    current_feature["expressions"].append(current_expr)
+                except NXOpen.NXException:
+                    pass
+            measurement_features.append(current_feature)
+    
+    with open("C:/Users/frandeen/Documents/datum/json_test.json", "w") as json_file:
+        json.dump(measurement_features, json_file, indent=4)
 
+    return num_measurements_found
 
 def update_measurements(measurement_database):
     theSession  = NXOpen.Session.GetSession()
@@ -86,14 +102,13 @@ def update_measurements(measurement_database):
         json.dump(new_rows_list, json_file, indent=4)
         
 def main(): 
-
-    theSession  = NXOpen.Session.GetSession()
-    workPart = theSession.Parts.Work
+    nxSession  = NXOpen.Session.GetSession()
     nxprint("Measurement Extractor. Using Pythong Version:")
     nxprint(sys.version)
     # find_feature_by_name("SURFACE_AREA_PAINTED")
     # update_measurements("C:/Users/frandeen/Documents/NX_Journals/measurements.csv")
-    export_measurements()
+    num_measurements = export_measurements(nxSession)
+    nxprint(f'Found total of {num_measurements} measurement features.')
 
 if __name__ == '__main__':
     main()
