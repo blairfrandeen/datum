@@ -7,6 +7,8 @@ FEATURE_NAME,FEATURE_TYPE,VALUE,UNITS
 
 FEATURE_TYPE is should be left blank for most length measurements, but is required for when
 a measurement has more than one value, such as a surface area measurement.
+
+TODO: Set this up to just grab all measurements and dump them in a JSON
 """
 import NXOpen
 import NXOpen.Features
