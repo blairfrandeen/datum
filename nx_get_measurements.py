@@ -9,8 +9,8 @@ FEATURE_TYPE is should be left blank for most length measurements, but is requir
 a measurement has more than one value, such as a surface area measurement.
 
 TODO: Set this up to just grab all measurements and dump them in a JSON
+TODO: Make this also work for PMI
 """
-from tkinter import W
 import NXOpen
 import csv
 import sys
@@ -36,7 +36,7 @@ def export_measurements(nxSession=None):
         markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
         nxSession.UpdateManager.DoInterpartUpdate(markId2)
         workPart = nxSession.Parts.Work
-    
+
     num_measurements_found = 0
     measurement_features = []
     for feature in workPart.Features:
@@ -47,9 +47,11 @@ def export_measurements(nxSession=None):
                 'expressions': []}
             for expr in feature.GetExpressions():
                 try:
+                    expr_type = re.search('(?<=\d\) )\w+(?=\))',expr.Description)
+                    if expr_type is not None:
+                        expr_type = expr_type[0]
                     current_expr = {\
-                        # 'type': re.search('(?<=\d\) )\w+(?=\))',expr.Description),
-                        'type': expr.Description,
+                        'type': expr_type,
                         'value': expr.Value,
                         'units': expr.Units.Name }
                     # nxprint(f'{expr.Description} - {expr.Value} [{expr.Units.Name}]')
@@ -58,7 +60,7 @@ def export_measurements(nxSession=None):
                 except NXOpen.NXException:
                     pass
             measurement_features.append(current_feature)
-    
+
     with open("C:/Users/frandeen/Documents/datum/json_test.json", "w") as json_file:
         json.dump(measurement_features, json_file, indent=4)
 
@@ -89,7 +91,7 @@ def update_measurements(measurement_database):
         new_rows_list.append(row)
         nxprint(f'{row["FEATURE_NAME"]}\t {row["FEATURE_TYPE"]}\t {row["VALUE"]}\t {row["UNITS"]}')
     csvfile.close()
-    
+
     csvwrite = open("C:/Users/frandeen/Documents/NX_Journals/test.csv","w", newline="")
     fieldnames = ["FEATURE_NAME", "FEATURE_TYPE", "VALUE", "UNITS"]
     writer = csv.DictWriter(csvwrite, fieldnames)
@@ -100,8 +102,8 @@ def update_measurements(measurement_database):
     # Let's also try this with JSON:
     with open("C:/Users/frandeen/Documents/NX_Journals/json_test.json", "w") as json_file:
         json.dump(new_rows_list, json_file, indent=4)
-        
-def main(): 
+
+def main():
     nxSession  = NXOpen.Session.GetSession()
     nxprint("Measurement Extractor. Using Pythong Version:")
     nxprint(sys.version)
