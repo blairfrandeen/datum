@@ -10,6 +10,9 @@ a measurement has more than one value, such as a surface area measurement.
 
 TODO: Set this up to just grab all measurements and dump them in a JSON
 TODO: Make this also work for PMI
+TODO: Detect working directory for script / JSON files
+TODO: Be able to take arguments passed through NX interface
+TODO: Optional pop-up for where to save files
 """
 import NXOpen
 import csv
@@ -33,12 +36,14 @@ def export_measurements(nxSession=None):
     #   Ensure that measruements are updated in the model
     #   Menu: Tools->Update->Interpart Update->Update All
     if nxSession:
-        markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
+        # TODO: Error handling if no NX session passed to function??
+        markId2 = nxSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible,\
+             "Update Session")
         nxSession.UpdateManager.DoInterpartUpdate(markId2)
         workPart = nxSession.Parts.Work
 
     num_measurements_found = 0
-    measurement_features = []
+    measurement_features = {"measurements": []}
     for feature in workPart.Features:
         if "MEASUREMENT" in feature.FeatureType:
             num_measurements_found += 1
@@ -47,9 +52,13 @@ def export_measurements(nxSession=None):
                 'expressions': []}
             for expr in feature.GetExpressions():
                 try:
+                    # typical type string: "p7( Face Measure : area )"
+                    # the regex below extracts "area"
                     expr_type = re.search('(?<=\d\) )\w+(?=\))',expr.Description)
                     if expr_type is not None:
                         expr_type = expr_type[0]
+                    # if no expression type, it's usually a distance measurement.
+                    # leave this as None / null
                     current_expr = {\
                         'type': expr_type,
                         'value': expr.Value,
@@ -59,7 +68,7 @@ def export_measurements(nxSession=None):
                     current_feature["expressions"].append(current_expr)
                 except NXOpen.NXException:
                     pass
-            measurement_features.append(current_feature)
+            measurement_features["measurements"].append(current_feature)
 
     with open("C:/Users/frandeen/Documents/datum/json_test.json", "w") as json_file:
         json.dump(measurement_features, json_file, indent=4)
@@ -105,7 +114,7 @@ def update_measurements(measurement_database):
 
 def main():
     nxSession  = NXOpen.Session.GetSession()
-    nxprint("Measurement Extractor. Using Pythong Version:")
+    nxprint("Measurement Extractor. Using Python Version:")
     nxprint(sys.version)
     # find_feature_by_name("SURFACE_AREA_PAINTED")
     # update_measurements("C:/Users/frandeen/Documents/NX_Journals/measurements.csv")
