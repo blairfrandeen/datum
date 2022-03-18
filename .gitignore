@@ -1,2 +1,4 @@
 __pycache__/nxmods.cpython-38.pyc
-json_test.json
+*.json
+*.xlsx
+journal.py
