@@ -9,17 +9,21 @@ FEATURE_TYPE is should be left blank for most length measurements, but is requir
 a measurement has more than one value, such as a surface area measurement.
 
 TODO: Make this also work for PMI
-TODO: Detect working directory for script / JSON files
 TODO: Be able to take arguments passed through NX interface
-TODO: Optional pop-up for where to save files
+TODO: Implement proper logging
 """
+from tkinter import TclError
 import NXOpen
-import csv
 import sys
 import json
 import re
+import os
 from nxmods import nxprint
 
+# user settable defaults for where to save JSON file
+user = os.getlogin()
+JSON_DEFAULT_DIR = f'C:\\Users\\{user}\\Documents\\datum\\'
+JSON_DEFAULT_FILE = "nx_measurements.json"
 
 def find_feature_by_name(feature_name):
     theSession  = NXOpen.Session.GetSession()
@@ -37,7 +41,7 @@ def check_feature_errors(nxSession=None):
     print(feature_update_status.Feature.Name)
     print(feature_update_status.Status)
 
-def export_measurements(nxSession=None):
+def export_measurements(json_export_file, nxSession=None):
     #   Ensure that measruements are updated in the model
     #   Menu: Tools->Update->Interpart Update->Update All
     if nxSession:
@@ -72,60 +76,64 @@ def export_measurements(nxSession=None):
                     # nxprint(f'{expr.Description} - {expr.Value} [{expr.Units.Name}]')
                     # nxprint(f'{expr.IsMeasurementExpression}, {expr.Name}, {expr.Tag}, {expr.Type}')
                     current_feature["expressions"].append(current_expr)
-                except NXOpen.NXException:
-                    pass
+                except NXOpen.NXException as nx_except_error:
+                    nxprint(f'WARNING: {expr.Description} was not saved in JSON. Cannot handle {expr.Type}.')
+                    # JUSTIFICATION:
+                    # This exception will be thrown when expr.Value is called on a non-number
+                    # expression, such as a point or a vector. Currently this script can
+                    # only handle number expressions
+                    # TODO: refactor `expr_type` to something that doesn't conflict with expr.Type
+                    # TODO: Allow for JSON serialization of List, Vector, and Point types,
+                    #   And ensure that these can be accessed.
+
             measurement_features["measurements"].append(current_feature)
 
-    with open("C:/Users/frandeen/Documents/datum/json_test.json", "w") as json_file:
+    with open(json_export_file, "w") as json_file:
         json.dump(measurement_features, json_file, indent=4)
 
     return num_measurements_found
 
-def update_measurements(measurement_database):
-    theSession  = NXOpen.Session.GetSession()
-    #   Ensure that measruements are updated in the model
-    #   Menu: Tools->Update->Interpart Update->Update All
-    markId2 = theSession.SetUndoMark(NXOpen.Session.MarkVisibility.Visible, "Update Session")
-    theSession.UpdateManager.DoInterpartUpdate(markId2)
-
-    csvfile = open(measurement_database, "r", newline="")
-    reader = csv.DictReader(csvfile)
-    new_rows_list = []
-    for row in reader:
-        measurement_feature = find_feature_by_name(row["FEATURE_NAME"])
-        if measurement_feature:
-            for expr in measurement_feature.GetExpressions():
-                if row["FEATURE_TYPE"] in expr.Description:
-                    try:
-                        row["VALUE"] = expr.Value
-                        row["UNITS"] = expr.Units.Abbreviation
-                    except:
-                        continue
+def get_json_file_path():
+    """Opens dialog box for user to choose where to save the measurements.
+    Uses default directory in case of failure.
+    
+    Requires very hacky work-around of installing tk and tcl in NX directories"""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.asksaveasfilename(defaultextension='.json',\
+            initialdir=JSON_DEFAULT_DIR,
+            initialfile=JSON_DEFAULT_FILE,
+            title="Choose JSON file for measurement export")
+        root.destroy()
+        if len(file_path) > 0:
+            return file_path
         else:
-            nxprint(f'Feature {row["FEATURE_NAME"]} not found!')
-        new_rows_list.append(row)
-        nxprint(f'{row["FEATURE_NAME"]}\t {row["FEATURE_TYPE"]}\t {row["VALUE"]}\t {row["UNITS"]}')
-    csvfile.close()
+            return None
+    except ImportError as error:
+        nxprint(error)
+        nxprint("Invalid tkinter installation, using default JSON path.")
+    except TclError as error:
+        nxprint(error)
+        nxprint("Invalid TCL installation, using default JSON path.")
 
-    csvwrite = open("C:/Users/frandeen/Documents/NX_Journals/test.csv","w", newline="")
-    fieldnames = ["FEATURE_NAME", "FEATURE_TYPE", "VALUE", "UNITS"]
-    writer = csv.DictWriter(csvwrite, fieldnames)
-    writer.writeheader()
-    writer.writerows(new_rows_list)
-
-    csvwrite.close()
-    # Let's also try this with JSON:
-    with open("C:/Users/frandeen/Documents/NX_Journals/json_test.json", "w") as json_file:
-        json.dump(new_rows_list, json_file, indent=4)
+    return f'{JSON_DEFAULT_DIR}\\{JSON_DEFAULT_FILE}'
 
 def main():
     nxSession  = NXOpen.Session.GetSession()
     nxprint("Measurement Extractor. Using Python Version:")
     nxprint(sys.version)
-    # find_feature_by_name("SURFACE_AREA_PAINTED")
-    # update_measurements("C:/Users/frandeen/Documents/NX_Journals/measurements.csv")
-    num_measurements = export_measurements(nxSession)
-    nxprint(f'Found total of {num_measurements} measurement features.')
+    json_export_path = get_json_file_path()
+    if json_export_path is not None:
+        nxprint(f'Exporting to {json_export_path}')
+        num_measurements = export_measurements(json_export_path, nxSession)
+        nxprint(f'Found total of {num_measurements} measurement features.')
+    else:
+        nxprint('No JSON file specified, exiting...')
+
 
 if __name__ == '__main__':
     main()
