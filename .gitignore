@@ -2,3 +2,4 @@ __pycache__/nxmods.cpython-38.pyc
 *.json
 *.xlsx
 journal.py
+*.log

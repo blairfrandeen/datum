@@ -17,6 +17,20 @@ import xlwings as xw
 import os
 import json
 import re
+import logging
+
+# logging set-up
+logger = logging.getLogger('xl_pnr')
+fh = logging.FileHandler('xl_pnr.log')
+fh.setLevel(logging.DEBUG)
+fh_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',\
+    datefmt='%Y-%m-%d %H:%M:%S')
+fh.setFormatter(fh_format)
+logger.addHandler(fh)
+
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+logger.addHandler(sh)
 
 # regex to split ranges into sheet and cells
 # illegal characters in excel sheet names: ?*[]\/:
@@ -28,7 +42,7 @@ def xw_get_workbook(target_workbook):
     for book in xw.apps[0].books:
         if book.name == target_workbook:
             return book
-    print(f'Error: Target workbook {target_workbook} not found in {os.getcwd()}')
+    print(f'Error: Target workbook {target_workbook} is not open.')
     return None
 
 def xw_get_named_range(workbook, range_name):
@@ -44,7 +58,7 @@ def xw_get_named_range(workbook, range_name):
         rng = workbook.sheets[worksheet].range(cell)
         return rng
     else:
-        print(f'Name {range_name} not found in {workbook}')
+        logger.debug(f'Name {range_name} not found in {workbook}')
         return None
 
 def read_named_range(workbook, range_name):
@@ -67,18 +81,20 @@ def backup_workbook(workbook):
     # TODO: Implement optional backup_dir argument to specify backup directory
     # TODO: Make more robust naming convention
     if not workbook.name.endswith('.xlsx'):
-        print(f'Warning: workbook "{workbook.name}" not a .xlsx file')
+        logger.warning(f'Warning: workbook "{workbook.name}" not a .xlsx file')
 
     wb_name = workbook.name.split('.')[-2]
     wb_full_path = workbook.fullname
     backup_path = f'{os.getcwd()}\\{wb_name}_BACKUP.xlsx'
     try:
+        new_workbook = xw.books.open(fullname=wb_full_path)
+    except FileNotFoundError:
+        logger.exception(f'Cannot open workbook at {wb_full_path}. Workbook will NOT be backed up prior to write!')
+    else:
         workbook.save(path=backup_path)
         new_workbook = xw.books.open(fullname=wb_full_path)
         workbook.close()
-    except:
-        raise(f'Error saving {workbook.name} to {backup_path}')
-    print(f'Successfully backed up to {backup_path}')
+    logger.info(f'Successfully backed up to {backup_path}')
     return new_workbook
 
 
@@ -98,8 +114,10 @@ def update_named_ranges(json_file, workbook, backup=True):
     for named_range in workbook.names:
         measurement_name = named_range.name.split('.')[0]
         try:
+            # example: MEASUREMENT.mass will take "mass" as the measurement type
             measurement_type = named_range.name.split('.')[1]
         except IndexError:
+            # if out of bounds, there is no "." in range name; use default measurement
             measurement_type = None
         workbook_named_ranges[measurement_name] = measurement_type
     # print(workbook_named_ranges)
@@ -138,6 +156,9 @@ def update_named_ranges(json_file, workbook, backup=True):
     if overwrite_confirm == 'y':
         if backup:
             workbook = backup_workbook(workbook)
+        logger.debug(f'Updating named ranges.\n\
+            Source: {json_file}\n\
+            Target: {workbook.fullname}')
         for range in write_list.keys():
             write_named_range(workbook, range, write_list[range])
     else:
