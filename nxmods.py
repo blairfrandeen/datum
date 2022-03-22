@@ -5,6 +5,10 @@ def nxprint(message):
     @param  message     message to print to the listing window
     """
     try:
+        #TODO: See if I can set this up so I don't have to keep
+        # getting the session & opening/closing the listing window
+        # for every message. If printing hundreds of lines, this can
+        # take a while.
         import NXOpen
         nxSession = NXOpen.Session.GetSession()
         lw = nxSession.ListingWindow

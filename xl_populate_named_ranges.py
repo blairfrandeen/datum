@@ -19,8 +19,13 @@ import re
 import logging
 
 # logging set-up
+<<<<<<< HEAD
 # TODO: Move to external config file
 logger = logging.getLogger('xl_pnr')
+=======
+# TODO: Move to a separate config file
+logger = logging.getLogger(__name__)
+>>>>>>> 1b43f67376848b1ada87f78f9017755adb38137b
 fh = logging.FileHandler('xl_pnr.log')
 fh.setLevel(logging.DEBUG)
 fh_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',\
@@ -34,6 +39,7 @@ logger.addHandler(sh)
 
 # regex to split ranges into sheet and cells
 # illegal characters in excel sheet names: ?*[]\/:
+# TODO: Update this regex to deal with ranges of multiple cells
 RE_RANGE_SPLIT = re.compile(r"(?<==)('?)([^\[\]\?*\\\/]+)\1!(\$[A-Z]+\$\d+)")
 
 def xw_get_workbook(target_workbook):
@@ -68,8 +74,6 @@ def read_named_range(workbook, range_name):
 
     return rng.value
 
-def write_named_range(workbook, range_name, new_value):
-    """Write a value to a named range in the workbook"""
     rng = xw_get_named_range(workbook, range_name)
     if rng is None: return None
 
@@ -102,10 +106,10 @@ def update_named_ranges(json_file, workbook, backup=True):
     """
     Open a JSON file and an excel file. Update the named
     ranges in the excel file with the corresponding JSON values.
-    
+
     Named ranges may correspond to a particular expression type.
     For example, the measurement SURFACE_SPHERICAL has an expression
-    of type "area", along with other expressions. To populate this in 
+    of type "area", along with other expressions. To populate this in
     Excel, we need to name the range "SURFACE_SPHERICAL.area"
     """
 
@@ -167,7 +171,7 @@ def update_named_ranges(json_file, workbook, backup=True):
 def user_select_item(item_list, item_type='choice'):
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
-    
+
     Return the index of the selected item."""
     # list the items
     print(f'Available {item_type}s:')
