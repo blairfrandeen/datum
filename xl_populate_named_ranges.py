@@ -11,7 +11,6 @@ xlwings requires that Excel be open in order to run this code.
 This only works with named ranges that are a single cell.
 Behavior with multiple-cell ranges has not been tested.
 
-TODO: Add proper logging setup (remove many print statements)
 """
 import xlwings as xw
 import os
@@ -20,6 +19,7 @@ import re
 import logging
 
 # logging set-up
+# TODO: Move to external config file
 logger = logging.getLogger('xl_pnr')
 fh = logging.FileHandler('xl_pnr.log')
 fh.setLevel(logging.DEBUG)
@@ -164,7 +164,7 @@ def update_named_ranges(json_file, workbook, backup=True):
     else:
         print("Aborted.")
 
-def user_select_item(item_list, item_type):
+def user_select_item(item_list, item_type='choice'):
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
     
@@ -191,6 +191,8 @@ def user_select_item(item_list, item_type):
 
 def user_select_open_workbook():
     workbook_list = [ book.name for book in xw.apps[0].books ]
+    # TODO: Incorporate this test into user_select_item, throw an
+    #   error if empty list received
     if len(workbook_list) > 0:
         workbook_index = user_select_item(workbook_list, 'Excel Workbook')
         if workbook_index is not None:
@@ -206,6 +208,8 @@ def user_select_json_file():
     for file in os.listdir():
         if file.endswith('.json'):
             json_file_list.append(file)
+    # TODO: Incorporate this test into user_select_item, throw an
+    #   error if empty list received
     if len(json_file_list) > 0:
         json_index = user_select_item(json_file_list, 'JSON file')
         if json_index is not None:
