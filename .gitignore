@@ -3,3 +3,4 @@ __pycache__/nxmods.cpython-38.pyc
 *.xlsx
 journal.py
 *.log
+*.swp

@@ -40,7 +40,7 @@ RE_RANGE_SPLIT = re.compile(r"(?<==)('?)([^\[\]\?*\\\/]+)\1!(\$[A-Z]+\$\d+)")
 def xw_get_workbook(target_workbook):
     """Searches the workbooks that Excel has open
     Returns a workbook object if found, throws an error otherwise"""
-    for book in xw.apps[0].books:
+    for book in xw.books:
         if book.name == target_workbook:
             return book
     print(f'Error: Target workbook {target_workbook} is not open.')
@@ -63,12 +63,17 @@ def xw_get_named_range(workbook, range_name):
         return None
 
 def read_named_range(workbook, range_name):
-    """Read a value from a named range in the work book"""
+    """Read a value from a named range in the work book
+    Note: This function will return 0 if an empty cell is read"""
     rng = xw_get_named_range(workbook, range_name)
     if rng is None: return None
 
-    return rng.value
+    if rng.value is None:
+        return 0
+    else:
+        return rng.value
 
+def write_named_range(workbook, range_name, new_value):
     rng = xw_get_named_range(workbook, range_name)
     if rng is None: return None
 
@@ -142,11 +147,16 @@ def update_named_ranges(json_file, workbook, backup=True):
                 if workbook_named_ranges[measurement['name']] is not None:
                     measurement_type = workbook_named_ranges[measurement['name']]
                 # print the value currently in Excel
-                excel_value = read_named_range(workbook, range_name)
-                # print(f'Excel value of {range_name}: {excel_value}')
+                # TODO: Better handling of non-float values.
+                excel_value = float(read_named_range(workbook, range_name))
+                print(f'Excel value of {range_name}: {excel_value}')
                 # print the value currently in JSON
-                # print(f'JSON Value: {json_value}')
-                percent_change = (json_value - excel_value) / excel_value * 100
+                print(f'JSON Value: {json_value}')
+                try:
+                    percent_change = (json_value - excel_value) / excel_value * 100
+                except ZeroDivisionError:
+                    percent_change = 100.0
+                # TODO: Better handling of empty values or zero values in Excel
                 print('{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%'.format(range_name, excel_value, json_value, percent_change))
                 write_list[range_name] = json_value
 
@@ -189,13 +199,13 @@ def user_select_item(item_list, item_type='choice'):
             return selection_index
 
 def user_select_open_workbook():
-    workbook_list = [ book.name for book in xw.apps[0].books ]
+    workbook_list = [ book.name for book in xw.books ]
     # TODO: Incorporate this test into user_select_item, throw an
     #   error if empty list received
     if len(workbook_list) > 0:
         workbook_index = user_select_item(workbook_list, 'Excel Workbook')
         if workbook_index is not None:
-            return xw.apps[0].books[workbook_index]
+            return xw.books[workbook_index]
         else:
             return None
     else:
@@ -224,7 +234,10 @@ def user_select_json_file():
 def main():
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
-    update_named_ranges(json_file, excel_workbook)
+    if json_file and excel_workbook:
+        update_named_ranges(json_file, excel_workbook)
+    else:
+        print("JSON and/or Excel not found. Exiting.")
 
 if __name__ == '__main__':
     main()
