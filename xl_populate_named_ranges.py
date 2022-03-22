@@ -19,13 +19,8 @@ import re
 import logging
 
 # logging set-up
-<<<<<<< HEAD
-# TODO: Move to external config file
-logger = logging.getLogger('xl_pnr')
-=======
 # TODO: Move to a separate config file
 logger = logging.getLogger(__name__)
->>>>>>> 1b43f67376848b1ada87f78f9017755adb38137b
 fh = logging.FileHandler('xl_pnr.log')
 fh.setLevel(logging.DEBUG)
 fh_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',\
