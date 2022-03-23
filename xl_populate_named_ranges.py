@@ -17,9 +17,14 @@ import os
 import json
 import re
 import logging
+import logging.config
 
 # logging set-up
 # TODO: Move to a separate config file
+# code below is start, but not yet tested
+#  logging.config.fileConfig('logging.conf')
+#  logger = logging.getLogger('root')
+
 logger = logging.getLogger(__name__)
 fh = logging.FileHandler('xl_pnr.log')
 fh.setLevel(logging.DEBUG)

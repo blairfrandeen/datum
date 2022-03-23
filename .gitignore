@@ -1,6 +1,7 @@
 __pycache__/nxmods.cpython-38.pyc
 *.json
 *.xlsx
+!tests/datum_excel_tests.xlsx
 journal.py
 *.log
 *.swp
