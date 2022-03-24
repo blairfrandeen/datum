@@ -20,22 +20,8 @@ import logging
 import logging.config
 
 # logging set-up
-# TODO: Move to a separate config file
-# code below is start, but not yet tested
-#  logging.config.fileConfig('logging.conf')
-#  logger = logging.getLogger('root')
-
-logger = logging.getLogger(__name__)
-fh = logging.FileHandler('xl_pnr.log')
-fh.setLevel(logging.DEBUG)
-fh_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',\
-    datefmt='%Y-%m-%d %H:%M:%S')
-fh.setFormatter(fh_format)
-logger.addHandler(fh)
-
-sh = logging.StreamHandler()
-sh.setLevel(logging.INFO)
-logger.addHandler(sh)
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('root')
 
 # regex to split ranges into sheet and cells
 # illegal characters in excel sheet names: ?*[]\/:
@@ -204,6 +190,9 @@ def user_select_item(item_list, item_type='choice'):
             return selection_index
 
 def user_select_open_workbook():
+    if len(xw.apps) == 0:
+        logger.error("Excel app not open, no workbooks found. Exiting.")
+        return None
     workbook_list = [ book.name for book in xw.books ]
     # TODO: Incorporate this test into user_select_item, throw an
     #   error if empty list received
@@ -237,6 +226,11 @@ def user_select_json_file():
         return None
 
 def main():
+    logger.debug('This is a debug message')
+    logger.info('This is an info message')
+    logger.warning('This is a warning message')
+    logger.error('This is an error message')
+    logger.critical('This is a critical message')
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
     if json_file and excel_workbook:
