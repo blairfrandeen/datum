@@ -12,21 +12,23 @@ This only works with named ranges that are a single cell.
 Behavior with multiple-cell ranges has not been tested.
 
 """
-import xlwings as xw
-import os
 import json
-import re
 import logging
 import logging.config
+import os
+import re
+
+import xlwings as xw
 
 # logging set-up
-logging.config.fileConfig('logging.conf')
-logger = logging.getLogger('root')
+logging.config.fileConfig("logging.conf")
+logger = logging.getLogger("root")
 
 # regex to split ranges into sheet and cells
 # illegal characters in excel sheet names: ?*[]\/:
 # TODO: Update this regex to deal with ranges of multiple cells
 RE_RANGE_SPLIT = re.compile(r"(?<==)('?)([^\[\]\?*\\\/]+)\1!(\$[A-Z]+\$\d+)")
+
 
 def xw_get_workbook(target_workbook):
     """Searches the workbooks that Excel has open
@@ -34,62 +36,72 @@ def xw_get_workbook(target_workbook):
     for book in xw.books:
         if book.name == target_workbook:
             return book
-    print(f'Error: Target workbook {target_workbook} is not open.')
+    logger.error(f"Target workbook {target_workbook} is not open.")
     return None
+
 
 def xw_get_named_range(workbook, range_name):
     """Find a named range in an open workbook
     Returns the range object if found, returns None if not found"""
     if range_name in workbook.names:
         # print(f'Found {range_name}')
-        range_split = re.search(RE_RANGE_SPLIT,\
-            workbook.names[range_name].refers_to).groups(0)
+        range_split = re.search(
+            RE_RANGE_SPLIT, workbook.names[range_name].refers_to
+        ).groups(0)
         worksheet = range_split[1]
         cell = range_split[2]
         # print(f'Refers to {worksheet} {cell}')
         rng = workbook.sheets[worksheet].range(cell)
         return rng
     else:
-        logger.debug(f'Name {range_name} not found in {workbook}')
+        logger.debug(f"Name {range_name} not found in {workbook}")
         return None
+
 
 def read_named_range(workbook, range_name):
     """Read a value from a named range in the work book
     Note: This function will return 0 if an empty cell is read"""
     rng = xw_get_named_range(workbook, range_name)
-    if rng is None: return None
+    if rng is None:
+        return None
 
     if rng.value is None:
         return 0
     else:
         return rng.value
 
+
 def write_named_range(workbook, range_name, new_value):
     rng = xw_get_named_range(workbook, range_name)
-    if rng is None: return None
+    if rng is None:
+        return None
 
     rng.value = new_value
+
 
 def backup_workbook(workbook):
     """Create a backup copy of the workbook. Returns
     a new workbook object for the current workbook."""
     # TODO: Implement optional backup_dir argument to specify backup directory
     # TODO: Make more robust naming convention
-    if not workbook.name.endswith('.xlsx'):
+    if not workbook.name.endswith(".xlsx"):
         logger.warning(f'Warning: workbook "{workbook.name}" not a .xlsx file')
 
-    wb_name = workbook.name.split('.')[-2]
+    wb_name = workbook.name.split(".")[-2]
     wb_full_path = workbook.fullname
-    backup_path = f'{os.getcwd()}\\{wb_name}_BACKUP.xlsx'
+    backup_path = f"{os.getcwd()}\\{wb_name}_BACKUP.xlsx"
     try:
         new_workbook = xw.books.open(fullname=wb_full_path)
     except FileNotFoundError:
-        logger.exception(f'Cannot open workbook at {wb_full_path}. Workbook will NOT be backed up prior to write!')
+        logger.exception(
+            f"Cannot open workbook at {wb_full_path}.\
+            Workbook will NOT be backed up prior to write!"
+        )
     else:
         workbook.save(path=backup_path)
         new_workbook = xw.books.open(fullname=wb_full_path)
         workbook.close()
-    logger.info(f'Successfully backed up to {backup_path}')
+    logger.info(f"Successfully backed up to {backup_path}")
     return new_workbook
 
 
@@ -107,97 +119,117 @@ def update_named_ranges(json_file, workbook, backup=True):
     # make a dict of named ranges, measurement names, and measurement types
     workbook_named_ranges = dict()
     for named_range in workbook.names:
-        measurement_name = named_range.name.split('.')[0]
+        measurement_name = named_range.name.split(".")[0]
         try:
-            # example: MEASUREMENT.mass will take "mass" as the measurement type
-            measurement_type = named_range.name.split('.')[1]
+            # example: MEASUREMENT.mass will take
+            # "mass" as the measurement type
+            measurement_type = named_range.name.split(".")[1]
         except IndexError:
-            # if out of bounds, there is no "." in range name; use default measurement
+            # if out of bounds, there is no "." in range name;
+            # use default measurement
             measurement_type = None
         workbook_named_ranges[measurement_name] = measurement_type
     # print(workbook_named_ranges)
     write_list = dict()
     with open(json_file, "r") as json_file_handle:
         json_data = json.load(json_file_handle)
-        #TODO: Add argument to function to skip confirmation
-        print('{0:<32} {1:>12} {2:>12} {3:>15}'.format('NAME', 'OLD VALUE', 'NEW VALUE', 'PERCENT CHANGE'))
-        print('{0:<32} {1:>12} {2:>12} {3:>15}'.format('------------', '------------', '------------', '------------'))
-        for measurement in json_data['measurements']:
-            if measurement['name'] in workbook_named_ranges.keys():
-                range_name = measurement['name']
-                range_type = workbook_named_ranges[measurement['name']]
+        # TODO: Add argument to function to skip confirmation
+        print(
+            "{0:<32} {1:>12} {2:>12} {3:>15}".format(
+                "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
+            )
+        )
+        print(
+            "{0:<32} {1:>12} {2:>12} {3:>15}".format(
+                "------------", "------------", "------------", "------------"
+            )
+        )
+        for measurement in json_data["measurements"]:
+            if measurement["name"] in workbook_named_ranges.keys():
+                range_name = measurement["name"]
+                range_type = workbook_named_ranges[measurement["name"]]
                 if range_type:
-                    range_name = f'{range_name}.{range_type}'
+                    range_name = f"{range_name}.{range_type}"
                     json_value = None
-                    for expr in measurement['expressions']:
-                        if expr['type'] == range_type:
-                            json_value = expr['value']
+                    for expr in measurement["expressions"]:
+                        if expr["type"] == range_type:
+                            json_value = expr["value"]
                             break
                 else:
-                    json_value = measurement['expressions'][0]['value']
-                if workbook_named_ranges[measurement['name']] is not None:
-                    measurement_type = workbook_named_ranges[measurement['name']]
+                    json_value = measurement["expressions"][0]["value"]
+                if workbook_named_ranges[measurement["name"]] is not None:
+                    measurement_type = workbook_named_ranges[measurement["name"]]
                 # print the value currently in Excel
                 # TODO: Better handling of non-float values.
                 excel_value = float(read_named_range(workbook, range_name))
-                print(f'Excel value of {range_name}: {excel_value}')
+                print(f"Excel value of {range_name}: {excel_value}")
                 # print the value currently in JSON
-                print(f'JSON Value: {json_value}')
+                print(f"JSON Value: {json_value}")
                 try:
                     percent_change = (json_value - excel_value) / excel_value * 100
                 except ZeroDivisionError:
                     percent_change = 100.0
                 # TODO: Better handling of empty values or zero values in Excel
-                print('{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%'.format(range_name, excel_value, json_value, percent_change))
+                print(
+                    "{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%".format(
+                        range_name, excel_value, json_value, percent_change
+                    )
+                )
                 write_list[range_name] = json_value
 
-    print("The values listed above will be overwritten. Enter 'y' to continue: ", end='')
+    print("The values listed above will be overwritten.")
+    print("Enter 'y' to continue: ", end="")
     overwrite_confirm = input()
-    if overwrite_confirm == 'y':
+    if overwrite_confirm == "y":
         if backup:
             workbook = backup_workbook(workbook)
-        logger.debug(f'Updating named ranges.\n\
+        logger.debug(
+            f"Updating named ranges.\n\
             Source: {json_file}\n\
-            Target: {workbook.fullname}')
+            Target: {workbook.fullname}"
+        )
         for range in write_list.keys():
             write_named_range(workbook, range, write_list[range])
     else:
         print("Aborted.")
 
-def user_select_item(item_list, item_type='choice'):
+
+def user_select_item(item_list, item_type="choice"):
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
 
     Return the index of the selected item."""
     # list the items
-    print(f'Available {item_type}s:')
+    print(f"Available {item_type}s:")
     for index, element in enumerate(item_list):
-        print(f'[{index}] - {element}')
-    while True: # keep asking for input until a valid input or quit command received
-        print(f'Select {item_type} index (q to quit): ', end='')
+        print(f"[{index}] - {element}")
+    # keep asking for input until a valid input or quit command received
+    while True:
+        print(f"Select {item_type} index (q to quit): ", end="")
         selection_index = input()
-        if selection_index == 'q':
+        if selection_index == "q":
             return None
         try:
             selection_index = int(selection_index)
-        except ValueError: # if selection is non-integer
-            print('Invalid input.')
+        except ValueError:  # if selection is non-integer
+            print("Invalid input.")
             continue
         if selection_index >= len(item_list) or selection_index < 0:
-            print('Index out of bounds.')
+            print("Index out of bounds.")
             continue
         else:
             return selection_index
+
 
 def user_select_open_workbook():
     if len(xw.apps) == 0:
         logger.error("Excel app not open, no workbooks found. Exiting.")
         return None
-    workbook_list = [ book.name for book in xw.books ]
+    workbook_list = [book.name for book in xw.books]
     # TODO: Incorporate this test into user_select_item, throw an
     #   error if empty list received
     if len(workbook_list) > 0:
-        workbook_index = user_select_item(workbook_list, 'Excel Workbook')
+        workbook_index = user_select_item(workbook_list, "Excel Workbook")
         if workbook_index is not None:
             return xw.books[workbook_index]
         else:
@@ -206,18 +238,19 @@ def user_select_open_workbook():
         print("No open workbooks detected.")
         return None
 
+
 def user_select_json_file():
     json_file_list = []
     for file in os.listdir():
-        if file.endswith('.json'):
+        if file.endswith(".json"):
             json_file_list.append(file)
     # TODO: Incorporate this test into user_select_item, throw an
     #   error if empty list received
     if len(json_file_list) > 0:
-        json_index = user_select_item(json_file_list, 'JSON file')
+        json_index = user_select_item(json_file_list, "JSON file")
         if json_index is not None:
-            #TODO: Make this compatible with linux/macOS - use pathlib?
-            json_file_path = f'{os.getcwd()}\\{json_file_list[json_index]}'
+            # TODO: Make this compatible with linux/macOS - use pathlib?
+            json_file_path = f"{os.getcwd()}\\{json_file_list[json_index]}"
             return json_file_path
         else:
             return None
@@ -225,12 +258,8 @@ def user_select_json_file():
         print("No JSON files detected in working directory.")
         return None
 
+
 def main():
-    logger.debug('This is a debug message')
-    logger.info('This is an info message')
-    logger.warning('This is a warning message')
-    logger.error('This is an error message')
-    logger.critical('This is a critical message')
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
     if json_file and excel_workbook:
@@ -238,5 +267,6 @@ def main():
     else:
         print("JSON and/or Excel not found. Exiting.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
