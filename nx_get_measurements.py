@@ -66,7 +66,7 @@ def export_measurements(json_export_file, nxSession=None):
                 try:
                     # typical type string: "p7( Face Measure : area )"
                     # the regex below extracts "area"
-                    expr_type = re.search("(?<=\d\) )\w+(?=\))", expr.Description)
+                    expr_type = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
                     if expr_type is not None:
                         expr_type = expr_type[0]
                     # if no expression type, likely a distance measurement.
