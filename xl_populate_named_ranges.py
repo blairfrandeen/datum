@@ -162,9 +162,9 @@ def update_named_ranges(json_file, workbook, backup=True):
                 # print the value currently in Excel
                 # TODO: Better handling of non-float values.
                 excel_value = float(read_named_range(workbook, range_name))
-                print(f"Excel value of {range_name}: {excel_value}")
+                # print(f"Excel value of {range_name}: {excel_value}")
                 # print the value currently in JSON
-                print(f"JSON Value: {json_value}")
+                # print(f"JSON Value: {json_value}")
                 try:
                     percent_change = (json_value - excel_value) / excel_value * 100
                 except ZeroDivisionError:
@@ -263,7 +263,8 @@ def main():
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
     if json_file and excel_workbook:
-        update_named_ranges(json_file, excel_workbook)
+        # TODO: Troubleshoot backup w/ M365 files
+        update_named_ranges(json_file, excel_workbook, backup=False)
     else:
         print("JSON and/or Excel not found. Exiting.")
 
