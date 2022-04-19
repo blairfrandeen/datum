@@ -162,6 +162,9 @@ def update_named_ranges(json_file, workbook, backup=True):
                 # print the value currently in Excel
                 # TODO: Better handling of non-float values.
                 excel_value = float(read_named_range(workbook, range_name))
+                # TODO: Remove hacky fix for mass units
+                if range_type == 'mass':
+                    json_value = json_value * 1000
                 # print(f"Excel value of {range_name}: {excel_value}")
                 # print the value currently in JSON
                 # print(f"JSON Value: {json_value}")
