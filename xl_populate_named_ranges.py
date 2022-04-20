@@ -16,18 +16,12 @@ import json
 import logging
 import logging.config
 import os
-import re
 
 import xlwings as xw
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
 logger = logging.getLogger("root")
-
-# regex to split ranges into sheet and cells
-# illegal characters in excel sheet names: ?*[]\/:
-# TODO: Update this regex to deal with ranges of multiple cells
-RE_RANGE_SPLIT = re.compile(r"(?<==)('?)([^\[\]\?*\\\/]+)\1!(\$[A-Z]+\$\d+)")
 
 
 def xw_get_workbook(target_workbook):
@@ -45,13 +39,11 @@ def xw_get_named_range(workbook, range_name):
     Returns the range object if found, returns None if not found"""
     if range_name in workbook.names:
         # print(f'Found {range_name}')
-        range_split = re.search(
-            RE_RANGE_SPLIT, workbook.names[range_name].refers_to
-        ).groups(0)
-        worksheet = range_split[1]
-        cell = range_split[2]
-        # print(f'Refers to {worksheet} {cell}')
-        rng = workbook.sheets[worksheet].range(cell)
+        if '#REF!' in workbook.names[range_name].refers_to:
+            logger.error(f"Name {range_name} has a #REF! error. Please fix prior to continuing.")
+            logger.error("Use the name manager to remove or fix any names with errors.")
+            return None
+        rng = workbook.names[range_name].refers_to_range
         return rng
     else:
         logger.debug(f"Name {range_name} not found in {workbook}")
@@ -61,6 +53,7 @@ def xw_get_named_range(workbook, range_name):
 def read_named_range(workbook, range_name):
     """Read a value from a named range in the work book
     Note: This function will return 0 if an empty cell is read"""
+    # TODO: Make this work with ranges of more than one cell
     rng = xw_get_named_range(workbook, range_name)
     if rng is None:
         return None
@@ -73,6 +66,9 @@ def read_named_range(workbook, range_name):
 
 def write_named_range(workbook, range_name, new_value):
     rng = xw_get_named_range(workbook, range_name)
+    if rng.size > 1:
+        logger.warning(f"range {rng.name} has size {rng.size}")
+        logger.warning("Sizes larger than 1 not supported.")
     if rng is None:
         return None
 
@@ -183,6 +179,8 @@ def update_named_ranges(json_file, workbook, backup=True):
     print("The values listed above will be overwritten.")
     print("Enter 'y' to continue: ", end="")
     overwrite_confirm = input()
+    # TODO: Implement a "retry" option, which allows fixing the workbook
+    #   or the source data, rather than existing and restarting the program 
     if overwrite_confirm == "y":
         if backup:
             workbook = backup_workbook(workbook)

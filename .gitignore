@@ -5,3 +5,5 @@ __pycache__/nxmods.cpython-38.pyc
 journal.py
 *.log
 *.swp
+tests/nx/
+nx_get_mp.py
