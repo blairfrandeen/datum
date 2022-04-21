@@ -16,6 +16,7 @@ import json
 import logging
 import logging.config
 import os
+import sys
 
 import xlwings as xw
 
@@ -179,8 +180,6 @@ def update_named_ranges(json_file, workbook, backup=True):
     print("The values listed above will be overwritten.")
     print("Enter 'y' to continue: ", end="")
     overwrite_confirm = input()
-    # TODO: Implement a "retry" option, which allows fixing the workbook
-    #   or the source data, rather than existing and restarting the program 
     if overwrite_confirm == "y":
         if backup:
             workbook = backup_workbook(workbook)
@@ -191,6 +190,7 @@ def update_named_ranges(json_file, workbook, backup=True):
         )
         for range in write_list.keys():
             write_named_range(workbook, range, write_list[range])
+    # TODO: Write "undo" function that reverts changes in workbook to previous values
     else:
         print("Aborted.")
 
@@ -260,7 +260,19 @@ def user_select_json_file():
         return None
 
 
+def console():
+    # TODO: Write a console function that keeps the program open until
+    # the user quits. Start by asking for a json file and an excel workbook.
+    # user can type 'j' to re-select or re-load JSON, and 'e' to re-select Excel.
+    # user can type 'u' to run update_named_ranges
+    user_command = None
+    while user_command != 'q':
+        user_command = input()
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--test':
+        os.chdir('tests')
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
     if json_file and excel_workbook:
