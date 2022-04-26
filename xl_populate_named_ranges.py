@@ -18,6 +18,7 @@ import logging.config
 import os
 import sys
 
+import datum_console
 import xlwings as xw
 
 # logging set-up
@@ -258,16 +259,6 @@ def user_select_json_file():
     else:
         print("No JSON files detected in working directory.")
         return None
-
-
-def console():
-    # TODO: Write a console function that keeps the program open until
-    # the user quits. Start by asking for a json file and an excel workbook.
-    # user can type 'j' to re-select or re-load JSON, and 'e' to re-select Excel.
-    # user can type 'u' to run update_named_ranges
-    user_command = None
-    while user_command != 'q':
-        user_command = input()
 
 
 def main():

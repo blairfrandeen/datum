@@ -1,5 +1,6 @@
 __pycache__/nxmods.cpython-38.pyc
 *.json
+!console_config.json
 *.xlsx
 !tests/datum_excel_tests.xlsx
 journal.py

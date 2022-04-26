@@ -1,0 +1,33 @@
+{
+    "commands": [
+            {
+                "id": ["h", "help"],
+                "function": "help_msg(console_config)",
+                "description": "Display this help message"
+            },
+            {
+                "id": ["q", "quit"],
+                "function": "exit(0)",
+                "description": "Quit"
+            },
+            {
+                "id": ["lm"],
+                "function": "user_select_json_file()",
+                "description": "Load measurements from a JSON file"
+            },
+            {
+                "id": ["lx"],
+                "function": "user_select_open_workbook()",
+                "description": "Open Excel workbook for writing"
+            },
+            {
+                "id": ["w"],
+                "function": "update_named_ranges()",
+                "description": "Update named ranges in Excel file."
+            }
+
+    ],
+    "help_intro": "Available commands and descriptions:",
+    "prompt": "> ",
+    "invalid_command": "Invalid command. Type 'h' for help, 'q' to quit."
+}
