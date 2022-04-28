@@ -1,4 +1,5 @@
 import json
+from collections import namedtuple
 
 def load_console_config(console_config_file):
     try:
@@ -24,43 +25,66 @@ def load_console_config(console_config_file):
     config_file.close()
     return console_configuration
 
-def print_name(name):
-    print(f"Your name is {name.upper()}!!")
-
-def help_msg(console_config):
-    """Display a help message and list all available commands."""
-    print(console_config["help_intro"])
-    for cmd in console_config["commands"]:
-        print("\t", end="")
-        for index, cmd_id in enumerate(cmd["id"]):
-            print(f"{cmd_id}", end="")
-            if index < len(cmd["id"]) - 1:
-                print(", ", end="")
-        print(f"\t\t{cmd['description']}")
+def print_name(name=None):
+    """Prints your name in ALL CAPS (test function)"""
+    if name:
+        print(f"Your name is {name.upper()}!!")
+    else:
+        print("Name argument required")
 
 
 def console(config_file):
     """
     Run a console within your python program.
-    Configure commands and help message in JSON file.
+    Some configuration options in JSON file.
     """
     console_config = load_console_config(config_file)
-    while True:
+
+    def _help_msg():
+        """Display this message and list all available commands."""
+        print(console_config["help_intro"])
+        # TODO: Cleaner formatting for this function.
+        for cmd in COMMANDS:
+            # print docstring for each command if available
+            # otherwise print the function name
+            if cmd.function.__doc__:
+                docstr = cmd.function.__doc__
+            else:
+                docstr = cmd.function.__name__
+            print(f"\t{cmd.id}\t{docstr}")
+
+
+    # Create a docstring for exit function
+    exit.__doc__ = "Quit"
+
+    COMMANDS = [
+            (["n", "name"], print_name),
+            (["h", "help"], _help_msg),
+            (["q", "quit"], exit)
+        ]
+
+    # Keep formatting neat for command list above
+    # while still leveraging named tuples
+    Command = namedtuple("Command", "id function")
+    COMMANDS = [ Command._make(cmd) for cmd in COMMANDS ]
+
+    user_input = None
+    while user_input != console_config["quit_command"]:
         print(console_config["prompt"], end='')
         user_input = input()
         user_command = user_input.split(' ')[0]
+        if user_command == "":
+            continue
         user_args = user_input.split(' ')[1:]
         num_args = len(user_args)
-        if num_args > 0:
-            print("Warning: Argument handling not implemented.")
         valid_command = False
-        for cmd in console_config["commands"]:
-            if user_command in cmd["id"] and user_command != "":
+        for cmd in COMMANDS:
+            if user_command in cmd.id:
                 valid_command = True
-                eval(cmd["function"])
+                cmd.function(*user_args)
+
         if not valid_command:
             print(console_config["invalid_command"])
-
 
 def main():
     console("console_config.json")

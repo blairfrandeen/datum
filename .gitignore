@@ -1,9 +1,14 @@
-__pycache__/nxmods.cpython-38.pyc
+# Only allow specific JSON files
+# keeps export controlled data off of Github
 *.json
 !console_config.json
+
+# Only allow specific excel files
 *.xlsx
 !tests/datum_excel_tests.xlsx
+
 journal.py
+__pycache__*
 *.log
 *.swp
 tests/nx/
