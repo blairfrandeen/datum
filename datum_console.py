@@ -60,6 +60,7 @@ def console(command_list, config_file=None):
             print(f"\t{cmd.id}\t{docstr}")
 
     command_list.append((["h", "help"], _help_msg))
+    command_list.append(([console_config["quit_command"], "quit"], exit))
 
     # Create a docstring for exit function
     exit.__doc__ = "Quit"
@@ -89,11 +90,10 @@ def console(command_list, config_file=None):
             print(console_config["invalid_command"])
 
 def main():
-    command_list = [
+    sample_command_list = [
             (["n", "name"], print_name),
-            (["q", "quit"], exit)
         ]
-    console(command_list)
+    console(sample_command_list)
 
 if __name__ == "__main__":
     main()
