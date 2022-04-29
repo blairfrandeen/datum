@@ -1,6 +1,0 @@
-{
-    "quit_command": "q",
-    "help_intro": "Available commands and descriptions:",
-    "prompt": "> ",
-    "invalid_command": "Invalid command. Type 'h' for help, 'q' to quit."
-}

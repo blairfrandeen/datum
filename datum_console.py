@@ -1,27 +1,6 @@
 import json
 from collections import namedtuple
 
-def load_console_config(console_config_file):
-    if not console_config_file:
-        return None
-    try:
-        config_file = open(console_config_file, "r")
-    except FileNotFoundError as err:
-        print(err)
-        return None
-    except IsADirectoryError as err:
-        print(err)
-        return None
-    except UnicodeDecodeError as err:
-        print(err)
-        return None
-    try:
-        console_configuration = json.load(config_file)
-    except json.decoder.JSONDecodeError as err:
-        print(err)
-        return None
-    config_file.close()
-    return console_configuration
 
 def print_name(name=None):
     """Prints your name in ALL CAPS (test function)"""
@@ -37,18 +16,9 @@ def console(command_list, config_file=None):
     Some configuration options in JSON file.
     """
 
-    console_config = load_console_config(config_file)
-    if not console_config:
-        console_config = {
-            "quit_command": "q",
-            "help_intro": "Available commands and descriptions:",
-            "prompt": "> ",
-            "invalid_command": "Invalid command. Type 'h' for help, 'q' to quit."
-        }
-
     def _help_msg():
         """Display this message and list all available commands."""
-        print(console_config["help_intro"])
+        print("Available commands and descriptions:")
         # TODO: Cleaner formatting for this function.
         for cmd in command_list:
             # print docstring for each command if available
@@ -59,8 +29,9 @@ def console(command_list, config_file=None):
                 docstr = cmd.function.__name__
             print(f"\t{cmd.id}\t{docstr}")
 
+    # Default commands appear at the end
     command_list.append((["h", "help"], _help_msg))
-    command_list.append(([console_config["quit_command"], "quit"], exit))
+    command_list.append((["q", "quit"], exit))
 
     # Create a docstring for exit function
     exit.__doc__ = "Quit"
@@ -72,8 +43,8 @@ def console(command_list, config_file=None):
     command_list = [ Command._make(cmd) for cmd in command_list ]
 
     user_input = None
-    while user_input != console_config["quit_command"]:
-        print(console_config["prompt"], end='')
+    while user_input != "q":
+        print('> ', end='')
         user_input = input()
         user_command = user_input.split(' ')[0]
         if user_command == "":
@@ -87,7 +58,7 @@ def console(command_list, config_file=None):
                 cmd.function(*user_args)
 
         if not valid_command:
-            print(console_config["invalid_command"])
+            print("Unknown command. Type 'h' for help, 'q' to quit.")
 
 def main():
     sample_command_list = [
