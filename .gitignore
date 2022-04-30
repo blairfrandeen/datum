@@ -1,7 +1,6 @@
 # Only allow specific JSON files
 # keeps export controlled data off of Github
 *.json
-!console_config.json
 
 # Only allow specific excel files
 *.xlsx

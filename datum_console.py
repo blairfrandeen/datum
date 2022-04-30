@@ -1,4 +1,3 @@
-import json
 from collections import namedtuple
 
 
@@ -36,21 +35,19 @@ def console(command_list, config_file=None):
     # Create a docstring for exit function
     exit.__doc__ = "Quit"
 
-
     # Keep formatting neat for command list above
     # while still leveraging named tuples
     Command = namedtuple("Command", "id function")
-    command_list = [ Command._make(cmd) for cmd in command_list ]
+    command_list = [Command._make(cmd) for cmd in command_list]
 
     user_input = None
     while user_input != "q":
-        print('> ', end='')
+        print("> ", end="")
         user_input = input()
-        user_command = user_input.split(' ')[0]
+        user_command = user_input.split(" ")[0]
         if user_command == "":
             continue
-        user_args = user_input.split(' ')[1:]
-        num_args = len(user_args)
+        user_args = user_input.split(" ")[1:]
         valid_command = False
         for cmd in command_list:
             if user_command in cmd.id:
@@ -60,11 +57,13 @@ def console(command_list, config_file=None):
         if not valid_command:
             print("Unknown command. Type 'h' for help, 'q' to quit.")
 
+
 def main():
     sample_command_list = [
-            (["n", "name"], print_name),
-        ]
+        (["n", "name"], print_name),
+    ]
     console(sample_command_list)
+
 
 if __name__ == "__main__":
     main()

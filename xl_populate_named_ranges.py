@@ -18,8 +18,9 @@ import logging.config
 import os
 import sys
 
-import datum_console
 import xlwings as xw
+
+import datum_console
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
@@ -41,8 +42,10 @@ def xw_get_named_range(workbook, range_name):
     Returns the range object if found, returns None if not found"""
     if range_name in workbook.names:
         # print(f'Found {range_name}')
-        if '#REF!' in workbook.names[range_name].refers_to:
-            logger.error(f"Name {range_name} has a #REF! error. Please fix prior to continuing.")
+        if "#REF!" in workbook.names[range_name].refers_to:
+            logger.error(
+                f"Name {range_name} has a #REF! error. Please fix prior to continuing."
+            )
             logger.error("Use the name manager to remove or fix any names with errors.")
             return None
         rng = workbook.names[range_name].refers_to_range
@@ -161,7 +164,7 @@ def update_named_ranges(json_file, workbook, backup=True):
                 # TODO: Better handling of non-float values.
                 excel_value = float(read_named_range(workbook, range_name))
                 # TODO: Remove hacky fix for mass units
-                if range_type == 'mass':
+                if range_type == "mass":
                     json_value = json_value * 1000
                 # print(f"Excel value of {range_name}: {excel_value}")
                 # print the value currently in JSON
@@ -262,8 +265,8 @@ def user_select_json_file():
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        os.chdir('tests')
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        os.chdir("tests")
     json_file = user_select_json_file()
     excel_workbook = user_select_open_workbook()
     if json_file and excel_workbook:
