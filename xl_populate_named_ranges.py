@@ -83,6 +83,7 @@ def backup_workbook(workbook):
     a new workbook object for the current workbook."""
     # TODO: Implement optional backup_dir argument to specify backup directory
     # TODO: Make more robust naming convention
+    # TODO: Troubleshoot backup w/ M365 files
     if not workbook.name.endswith(".xlsx"):
         logger.warning(f'Warning: workbook "{workbook.name}" not a .xlsx file')
 
@@ -104,19 +105,11 @@ def backup_workbook(workbook):
     return new_workbook
 
 
-def update_named_ranges(json_file, workbook, backup=True):
-    """
-    Open a JSON file and an excel file. Update the named
-    ranges in the excel file with the corresponding JSON values.
-
-    Named ranges may correspond to a particular expression type.
-    For example, the measurement SURFACE_SPHERICAL has an expression
-    of type "area", along with other expressions. To populate this in
-    Excel, we need to name the range "SURFACE_SPHERICAL.area"
-    """
-
+def get_workbook_names_dict(workbook):
     # make a dict of named ranges, measurement names, and measurement types
     workbook_named_ranges = dict()
+    if len(workbook.names) == 0:
+        return None
     for named_range in workbook.names:
         measurement_name = named_range.name.split(".")[0]
         try:
@@ -128,58 +121,47 @@ def update_named_ranges(json_file, workbook, backup=True):
             # use default measurement
             measurement_type = None
         workbook_named_ranges[measurement_name] = measurement_type
-    # print(workbook_named_ranges)
-    write_list = dict()
-    with open(json_file, "r") as json_file_handle:
-        json_data = json.load(json_file_handle)
-        # TODO: Add argument to function to skip confirmation
+
+    return workbook_named_ranges
+
+
+def preview_named_range_update(range_update_buffer, workbook):
+    """Print out list of values that will be overwritten."""
+
+    print(
+        "{0:<32} {1:>12} {2:>12} {3:>15}".format(
+            "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
+        )
+    )
+    print(
+        "{0:<32} {1:>12} {2:>12} {3:>15}".format(
+            "------------", "------------", "------------", "------------"
+        )
+    )
+
+    for range_name in range_update_buffer.keys():
+        json_value = range_update_buffer[range_name]
+        # TODO: Better handling of non-float values.
+        excel_value = float(read_named_range(workbook, range_name))
+
+        try:
+            percent_change = (json_value - excel_value) / excel_value * 100
+        except ZeroDivisionError:
+            percent_change = 100.0
+        # TODO: Better handling of empty values or zero values in Excel
         print(
-            "{0:<32} {1:>12} {2:>12} {3:>15}".format(
-                "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
+            "{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%".format(
+                range_name, excel_value, json_value, percent_change
             )
         )
-        print(
-            "{0:<32} {1:>12} {2:>12} {3:>15}".format(
-                "------------", "------------", "------------", "------------"
-            )
-        )
-        for measurement in json_data["measurements"]:
-            if measurement["name"] in workbook_named_ranges.keys():
-                range_name = measurement["name"]
-                range_type = workbook_named_ranges[measurement["name"]]
-                if range_type:
-                    range_name = f"{range_name}.{range_type}"
-                    json_value = None
-                    for expr in measurement["expressions"]:
-                        if expr["type"] == range_type:
-                            json_value = expr["value"]
-                            break
-                else:
-                    json_value = measurement["expressions"][0]["value"]
-                if workbook_named_ranges[measurement["name"]] is not None:
-                    measurement_type = workbook_named_ranges[measurement["name"]]
-                # print the value currently in Excel
-                # TODO: Better handling of non-float values.
-                excel_value = float(read_named_range(workbook, range_name))
-                # TODO: Remove hacky fix for mass units
-                if range_type == "mass":
-                    json_value = json_value * 1000
-                # print(f"Excel value of {range_name}: {excel_value}")
-                # print the value currently in JSON
-                # print(f"JSON Value: {json_value}")
-                try:
-                    percent_change = (json_value - excel_value) / excel_value * 100
-                except ZeroDivisionError:
-                    percent_change = 100.0
-                # TODO: Better handling of empty values or zero values in Excel
-                print(
-                    "{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%".format(
-                        range_name, excel_value, json_value, percent_change
-                    )
-                )
-                write_list[range_name] = json_value
+
+
+def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
+
+    preview_named_range_update(range_update_buffer, workbook)
 
     print("The values listed above will be overwritten.")
+    # TODO: Add argument to function to skip confirmation
     print("Enter 'y' to continue: ", end="")
     overwrite_confirm = input()
     if overwrite_confirm == "y":
@@ -190,89 +172,56 @@ def update_named_ranges(json_file, workbook, backup=True):
             Source: {json_file}\n\
             Target: {workbook.fullname}"
         )
-        for range in write_list.keys():
-            write_named_range(workbook, range, write_list[range])
-    # TODO: Write "undo" function that reverts changes in workbook to previous values
+        range_undo_buffer = dict()
+        for range in range_update_buffer.keys():
+            range_undo_buffer[range] = read_named_range(workbook, range)
+            write_named_range(workbook, range, range_update_buffer[range])
+        return range_undo_buffer
     else:
         print("Aborted.")
-
-
-def user_select_item(item_list, item_type="choice"):
-    """Given a list of files or workbooks, enumerate them and
-    ask the user to select one item.
-
-    Return the index of the selected item."""
-    # list the items
-    print(f"Available {item_type}s:")
-    for index, element in enumerate(item_list):
-        print(f"[{index}] - {element}")
-    # keep asking for input until a valid input or quit command received
-    while True:
-        print(f"Select {item_type} index (q to quit): ", end="")
-        selection_index = input()
-        if selection_index == "q":
-            return None
-        try:
-            selection_index = int(selection_index)
-        except ValueError:  # if selection is non-integer
-            print("Invalid input.")
-            continue
-        if selection_index >= len(item_list) or selection_index < 0:
-            print("Index out of bounds.")
-            continue
-        else:
-            return selection_index
-
-
-def user_select_open_workbook():
-    if len(xw.apps) == 0:
-        logger.error("Excel app not open, no workbooks found. Exiting.")
-        return None
-    workbook_list = [book.name for book in xw.books]
-    # TODO: Incorporate this test into user_select_item, throw an
-    #   error if empty list received
-    if len(workbook_list) > 0:
-        workbook_index = user_select_item(workbook_list, "Excel Workbook")
-        if workbook_index is not None:
-            return xw.books[workbook_index]
-        else:
-            return None
-    else:
-        print("No open workbooks detected.")
         return None
 
 
-def user_select_json_file():
-    json_file_list = []
-    for file in os.listdir():
-        if file.endswith(".json"):
-            json_file_list.append(file)
-    # TODO: Incorporate this test into user_select_item, throw an
-    #   error if empty list received
-    if len(json_file_list) > 0:
-        json_index = user_select_item(json_file_list, "JSON file")
-        if json_index is not None:
-            # TODO: Make this compatible with linux/macOS - use pathlib?
-            json_file_path = f"{os.getcwd()}\\{json_file_list[json_index]}"
-            return json_file_path
-        else:
-            return None
-    else:
-        print("No JSON files detected in working directory.")
+def update_named_ranges(json_file, workbook, backup=True):
+    """
+    Open a JSON file and an excel file. Update the named
+    ranges in the excel file with the corresponding JSON values.
+
+    Named ranges may correspond to a particular expression type.
+    For example, the measurement SURFACE_SPHERICAL has an expression
+    of type "area", along with other expressions. To populate this in
+    Excel, we need to name the range "SURFACE_SPHERICAL.area"
+    """
+
+    workbook_named_ranges = get_workbook_names_dict(workbook)
+    if workbook_named_ranges is None:
+        logger.error(f"Workbook {workbook} has no valid named ranges.")
+        # TODO: Return value for function - this gets us out and
+        # back to console for now
         return None
 
+    range_update_buffer = dict()
+    with open(json_file, "r") as json_file_handle:
+        json_data = json.load(json_file_handle)
 
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        os.chdir("tests")
-    json_file = user_select_json_file()
-    excel_workbook = user_select_open_workbook()
-    if json_file and excel_workbook:
-        # TODO: Troubleshoot backup w/ M365 files
-        update_named_ranges(json_file, excel_workbook, backup=False)
-    else:
-        print("JSON and/or Excel not found. Exiting.")
+    for measurement in json_data["measurements"]:
+        if measurement["name"] in workbook_named_ranges.keys():
+            range_name = measurement["name"]
+            range_type = workbook_named_ranges[measurement["name"]]
+            if range_type:
+                range_name = f"{range_name}.{range_type}"
+                json_value = None
+                for expr in measurement["expressions"]:
+                    if expr["type"] == range_type:
+                        json_value = expr["value"]
+                        break
+            else:
+                json_value = measurement["expressions"][0]["value"]
 
+            # TODO: Remove hacky fix for mass units
+            if range_type == "mass":
+                json_value = json_value * 1000
 
-if __name__ == "__main__":
-    main()
+            range_update_buffer[range_name] = json_value
+
+    return write_named_ranges(workbook, range_update_buffer, json_file, backup)
