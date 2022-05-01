@@ -1,15 +1,35 @@
+import os
+import sys
+
 from collections import namedtuple
 
-
-def print_name(name=None):
-    """Prints your name in ALL CAPS (test function)"""
-    if name:
-        print(f"Your name is {name.upper()}!!")
-    else:
-        print("Name argument required")
+from xl_populate_named_ranges import update_named_ranges, user_select_json_file, user_select_open_workbook
 
 
-def console(command_list, config_file=None):
+class ConsoleSession:
+    def __init__(self):
+        self.json_file = None
+        self.excel_workbook = None
+
+    def load_measurement(self):
+        self.json_file = user_select_json_file()
+
+    def load_workbook(self):
+        self.excel_workbook = user_select_open_workbook()
+
+    def update_named_ranges(self, backup=False):
+        if not self.json_file:
+            self.load_measurement()
+        if not self.excel_workbook:
+            self.load_workbook()
+        update_named_ranges(self.json_file, self.excel_workbook, backup)
+
+    def status(self):
+        print(f"Loaded Measurement:\t{self.json_file}")
+        print(f"Loaded Workbook:\t{self.excel_workbook}")
+
+
+def console(console_session, command_list, config_file=None):
     """
     Run a console within your python program.
     Some configuration options in JSON file.
@@ -26,7 +46,7 @@ def console(command_list, config_file=None):
                 docstr = cmd.function.__doc__
             else:
                 docstr = cmd.function.__name__
-            print(f"\t{cmd.id}\t{docstr}")
+            print(f"\t{cmd.id}\t\t{docstr}")
 
     # Default commands appear at the end
     command_list.append((["h", "help"], _help_msg))
@@ -59,10 +79,17 @@ def console(command_list, config_file=None):
 
 
 def main():
-    sample_command_list = [
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        os.chdir("tests")
+    cs = ConsoleSession()
+    command_list = [
         (["n", "name"], print_name),
+        (["lm"], cs.load_measurement),
+        (["lw"], cs.load_workbook),
+        (["s"], cs.status),
+        (["u"], cs.update_named_ranges)
     ]
-    console(sample_command_list)
+    console(cs, command_list)
 
 
 if __name__ == "__main__":

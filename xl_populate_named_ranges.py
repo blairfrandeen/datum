@@ -20,7 +20,7 @@ import sys
 
 import xlwings as xw
 
-import datum_console
+# import datum_console
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
