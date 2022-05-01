@@ -1,0 +1,268 @@
+{
+    "measurements": [
+        {
+            "name": "SURFACE_PAINTED",
+            "expressions": [
+                {
+                    "type": "area",
+                    "value": 731851.4496561459,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "perimeter",
+                    "value": 67824.5565967054,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "arc_size",
+                    "value": 0.0,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "minimum_radius",
+                    "value": 2.999999999999707,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "error_estimate",
+                    "value": 116.28934454029633,
+                    "units": "SquareMilliMeter"
+                }
+            ]
+        },
+        {
+            "name": "HOUSING",
+            "expressions": [
+                {
+                    "type": "surface_area",
+                    "value": 1947140.8285505488,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume",
+                    "value": 16454655.731777554,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass",
+                    "value": 128.8504853594866,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "weight",
+                    "value": 1263591.6122506093,
+                    "units": "Newton"
+                },
+                {
+                    "type": "density",
+                    "value": 7.83064e-06,
+                    "units": "KilogramPerCubicMilliMeter"
+                },
+                {
+                    "type": "moments_of_inertia_spherical",
+                    "value": 5458715.923546972,
+                    "units": "KilogramMilliMeterSquared"
+                },
+                {
+                    "type": "radii_of_gyration_spherical",
+                    "value": 205.82694000318057,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "area_error_estimate",
+                    "value": 652.2349334965317,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume_error_estimate",
+                    "value": 41239.07148381387,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass_error_estimate",
+                    "value": 0.3229283227240103,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "radius_for_cog_error_estimate",
+                    "value": 6.9652413424292,
+                    "units": "MilliMeter"
+                }
+            ]
+        },
+        {
+            "name": "FASTENERS",
+            "expressions": [
+                {
+                    "type": "surface_area",
+                    "value": 206622.11269042993,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume",
+                    "value": 485739.65899806167,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass",
+                    "value": 3.802923032687038,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "weight",
+                    "value": 37293.93515850034,
+                    "units": "Newton"
+                },
+                {
+                    "type": "density",
+                    "value": 7.829138432985587e-06,
+                    "units": "KilogramPerCubicMilliMeter"
+                },
+                {
+                    "type": "moments_of_inertia_spherical",
+                    "value": 185237.86339498416,
+                    "units": "KilogramMilliMeterSquared"
+                },
+                {
+                    "type": "radii_of_gyration_spherical",
+                    "value": 220.70192115625818,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "area_error_estimate",
+                    "value": 18.728861384570415,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume_error_estimate",
+                    "value": 59.358526351084485,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass_error_estimate",
+                    "value": 0.00046478600363419886,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "radius_for_cog_error_estimate",
+                    "value": 0.3164404719435524,
+                    "units": "MilliMeter"
+                }
+            ]
+        },
+        {
+            "name": "GEARS",
+            "expressions": [
+                {
+                    "type": "surface_area",
+                    "value": 1186755.074478255,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume",
+                    "value": 6954168.887863808,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass",
+                    "value": 54.45559306006185,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "weight",
+                    "value": 534026.9416824556,
+                    "units": "Newton"
+                },
+                {
+                    "type": "density",
+                    "value": 7.83064e-06,
+                    "units": "KilogramPerCubicMilliMeter"
+                },
+                {
+                    "type": "moments_of_inertia_spherical",
+                    "value": 1229901.5714459931,
+                    "units": "KilogramMilliMeterSquared"
+                },
+                {
+                    "type": "radii_of_gyration_spherical",
+                    "value": 150.28441049896287,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "area_error_estimate",
+                    "value": 243.96289677175443,
+                    "units": "SquareMilliMeter"
+                },
+                {
+                    "type": "volume_error_estimate",
+                    "value": 14474.208616924514,
+                    "units": "CubicMilliMeter"
+                },
+                {
+                    "type": "mass_error_estimate",
+                    "value": 0.11334231696402952,
+                    "units": "Kilogram"
+                },
+                {
+                    "type": "radius_for_cog_error_estimate",
+                    "value": 5.567146625604381,
+                    "units": "MilliMeter"
+                }
+            ]
+        },
+        {
+            "name": "BOUNDING",
+            "expressions": [
+                {
+                    "type": "length",
+                    "value": 546.0,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "width",
+                    "value": 557.9999999999995,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "height",
+                    "value": 375.0844353738772,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": "volume",
+                    "value": 114276224.75648834,
+                    "units": "CubicMilliMeter"
+                }
+            ]
+        },
+        {
+            "name": "DIPSTICK",
+            "expressions": [
+                {
+                    "type": null,
+                    "value": 90.0,
+                    "units": "Degrees"
+                }
+            ]
+        },
+        {
+            "name": "AIR NUT",
+            "expressions": []
+        },
+        {
+            "name": "SHAFT CENTERS",
+            "expressions": [
+                {
+                    "type": null,
+                    "value": 159.9999999999999,
+                    "units": "MilliMeter"
+                },
+                {
+                    "type": null,
+                    "value": 0.0,
+                    "units": "Degrees"
+                }
+            ]
+        }
+    ]
+}

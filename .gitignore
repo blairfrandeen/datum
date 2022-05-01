@@ -1,6 +1,7 @@
 # Only allow specific JSON files
 # keeps export controlled data off of Github
 *.json
+!tests/nx_measurements_test.json
 
 # Only allow specific excel files
 *.xlsx
