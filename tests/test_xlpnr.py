@@ -1,12 +1,15 @@
 import unittest
 import xlwings as xw
 import datetime
-import json
+
+from unittest.mock import patch
 
 import xl_populate_named_ranges as xlpnr
 
 TEST_JSON_FILE = "tests/nx_measurements_test.json"
 TEST_EXCEL_WB = "tests/datum_excel_tests.xlsx"
+
+
 class TestXL(unittest.TestCase):
     def setUp(self):
         self._load_json_test()
@@ -57,8 +60,20 @@ class TestXL(unittest.TestCase):
         self.assertIsInstance(valid_workbook, xw.Book)
 
 
+    def test_update(self):
+        # value from JSON measurement = 90
+        xlpnr.write_named_range(self.workbook, "DIPSTICK", 95)
+
+        # confirm overwrite automatically
+        with patch('builtins.input', return_value='y'):
+            xlpnr.update_named_ranges(self.json_file, self.workbook, backup=False)
+        updated_value = xlpnr.read_named_range(self.workbook, "DIPSTICK")
+        self.assertEqual(updated_value, 90)
+
+
     def tearDown(self):
         for book in self.app.books:
+            book.save()
             book.close()
         self.app.quit()
         
