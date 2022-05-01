@@ -83,7 +83,6 @@ def main():
         os.chdir("tests")
     cs = ConsoleSession()
     command_list = [
-        (["n", "name"], print_name),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
         (["s"], cs.status),

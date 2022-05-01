@@ -20,8 +20,6 @@ import sys
 
 import xlwings as xw
 
-# import datum_console
-
 # logging set-up
 logging.config.fileConfig("logging.conf")
 logger = logging.getLogger("root")
@@ -42,7 +40,7 @@ def xw_get_named_range(workbook, range_name):
     Returns the range object if found, returns None if not found"""
     if range_name in workbook.names:
         # print(f'Found {range_name}')
-        if "#REF!" in workbook.names[range_name].refers_to:
+        if "!#REF!" in workbook.names[range_name].refers_to:
             logger.error(
                 f"Name {range_name} has a #REF! error. Please fix prior to continuing."
             )
