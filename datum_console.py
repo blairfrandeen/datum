@@ -4,7 +4,7 @@ from collections import namedtuple
 
 import xlwings as xw
 
-from xl_populate_named_ranges import update_named_ranges, write_named_ranges
+from xl_populate_named_ranges import update_named_ranges, write_named_ranges, logger
 
 
 # TODO: Set up logging for tests
