@@ -105,26 +105,6 @@ def backup_workbook(workbook):
     return new_workbook
 
 
-def get_workbook_names_dict(workbook):
-    # make a dict of named ranges, measurement names, and measurement types
-    workbook_named_ranges = dict()
-    if len(workbook.names) == 0:
-        return None
-    for named_range in workbook.names:
-        measurement_name = named_range.name.split(".")[0]
-        try:
-            # example: MEASUREMENT.mass will take
-            # "mass" as the measurement type
-            measurement_type = named_range.name.split(".")[1]
-        except IndexError:
-            # if out of bounds, there is no "." in range name;
-            # use default measurement
-            measurement_type = None
-        workbook_named_ranges[measurement_name] = measurement_type
-
-    return workbook_named_ranges
-
-
 def preview_named_range_update(range_update_buffer, workbook):
     """Print out list of values that will be overwritten."""
 
@@ -172,14 +152,44 @@ def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
             Source: {json_file}\n\
             Target: {workbook.fullname}"
         )
-        range_undo_buffer = dict()
         for range in range_update_buffer.keys():
-            range_undo_buffer[range] = read_named_range(workbook, range)
             write_named_range(workbook, range, range_update_buffer[range])
-        return range_undo_buffer
     else:
         print("Aborted.")
+
+
+def get_json_measurement_names(json_file):
+    with open(json_file, "r") as json_file_handle:
+        json_data = json.load(json_file_handle)
+
+    json_named_measurements = dict()
+    if len(json_data["measurements"]) == 0:
+        # TODO: Error message here?
         return None
+    for measurement in json_data["measurements"]:
+        measurement_name = measurement["name"]
+        for expr in measurement["expressions"]:
+            range_type = expr["type"]
+            if range_type:
+                range_name = f"{measurement_name}.{range_type}"
+            else:
+                range_name = measurement_name
+            json_named_measurements[range_name] = expr["value"]
+
+    return json_named_measurements
+
+
+def get_workbook_range_names(workbook):
+    # make a dict of named ranges, measurement names, and measurement types
+    workbook_named_ranges = dict()
+    if len(workbook.names) == 0:
+        # TODO: Error message here?
+        return None
+    for named_range in workbook.names:
+        range_value = read_named_range(workbook, named_range.name)
+        workbook_named_ranges[named_range.name] = range_value
+
+    return workbook_named_ranges
 
 
 def update_named_ranges(json_file, workbook, backup=True):
@@ -193,35 +203,21 @@ def update_named_ranges(json_file, workbook, backup=True):
     Excel, we need to name the range "SURFACE_SPHERICAL.area"
     """
 
-    workbook_named_ranges = get_workbook_names_dict(workbook)
-    if workbook_named_ranges is None:
-        logger.error(f"Workbook {workbook} has no valid named ranges.")
-        # TODO: Return value for function - this gets us out and
-        # back to console for now
-        return None
+    json_named_measurements = get_json_measurement_names(json_file)
+    workbook_named_ranges = get_workbook_range_names(workbook)
+
+    # find range names that occur both in Excel and JSON
+    ranges_to_update = list(
+        json_named_measurements.keys() & workbook_named_ranges.keys()
+        )
 
     range_update_buffer = dict()
-    with open(json_file, "r") as json_file_handle:
-        json_data = json.load(json_file_handle)
+    range_undo_buffer = dict()
 
-    for measurement in json_data["measurements"]:
-        if measurement["name"] in workbook_named_ranges.keys():
-            range_name = measurement["name"]
-            range_type = workbook_named_ranges[measurement["name"]]
-            if range_type:
-                range_name = f"{range_name}.{range_type}"
-                json_value = None
-                for expr in measurement["expressions"]:
-                    if expr["type"] == range_type:
-                        json_value = expr["value"]
-                        break
-            else:
-                json_value = measurement["expressions"][0]["value"]
+    for range in ranges_to_update:
+        range_update_buffer[range] = json_named_measurements[range]
+        range_undo_buffer[range] = workbook_named_ranges[range]
 
-            # TODO: Remove hacky fix for mass units
-            if range_type == "mass":
-                json_value = json_value * 1000
+    write_named_ranges(workbook, range_update_buffer, json_file, backup)
 
-            range_update_buffer[range_name] = json_value
-
-    return write_named_ranges(workbook, range_update_buffer, json_file, backup)
+    return range_undo_buffer

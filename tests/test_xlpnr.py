@@ -55,20 +55,21 @@ class TestXL(unittest.TestCase):
     def test_get_workbook(self):
         non_existant_workbook = xlpnr.xw_get_workbook('DNE.xlsx')
         self.assertIsNone(non_existant_workbook)
-        print([b for b in xw.books])
         valid_workbook = xlpnr.xw_get_workbook('datum_excel_tests.xlsx')
         self.assertIsInstance(valid_workbook, xw.Book)
 
 
     def test_update(self):
-        # value from JSON measurement = 90
-        xlpnr.write_named_range(self.workbook, "DIPSTICK", 95)
+        xlpnr.write_named_range(self.workbook, "DIPSTICK", 95) # should be: 90
+        xlpnr.write_named_range(self.workbook, "GEARS.mass", 45) # should be: 55.456
 
         # confirm overwrite automatically
         with patch('builtins.input', return_value='y'):
             xlpnr.update_named_ranges(self.json_file, self.workbook, backup=False)
         updated_value = xlpnr.read_named_range(self.workbook, "DIPSTICK")
         self.assertEqual(updated_value, 90)
+        updated_value = xlpnr.read_named_range(self.workbook, "GEARS.mass")
+        self.assertAlmostEqual(updated_value, 54.456, places=2)
 
 
     def tearDown(self):
