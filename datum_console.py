@@ -1,5 +1,3 @@
-import logging
-import logging.config
 import os
 import sys
 
@@ -9,12 +7,7 @@ from xl_populate_named_ranges import update_named_ranges, write_named_ranges
 
 import xlwings as xw
 
-
-# logging set-up
-logging.config.fileConfig("logging.conf")
-logger = logging.getLogger("root")
-
-
+# TODO: Set up logging for tests
 class ConsoleSession:
     def __init__(self):
         self.json_file = None

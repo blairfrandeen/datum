@@ -1,6 +1,8 @@
 import unittest
 import xlwings as xw
 import datetime
+import logging
+import logging.config
 
 from unittest.mock import patch
 
@@ -9,6 +11,9 @@ import xl_populate_named_ranges as xlpnr
 TEST_JSON_FILE = "tests/nx_measurements_test.json"
 TEST_EXCEL_WB = "tests/datum_excel_tests.xlsx"
 
+# logging set-up
+logging.config.fileConfig("logging.conf")
+logger = logging.getLogger("test")
 
 class TestXL(unittest.TestCase):
     def setUp(self):
