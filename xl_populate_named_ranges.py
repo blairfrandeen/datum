@@ -209,7 +209,7 @@ def update_named_ranges(json_file, workbook, backup=True):
     # find range names that occur both in Excel and JSON
     ranges_to_update = list(
         json_named_measurements.keys() & workbook_named_ranges.keys()
-        )
+    )
 
     range_update_buffer = dict()
     range_undo_buffer = dict()

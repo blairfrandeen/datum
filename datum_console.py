@@ -1,11 +1,11 @@
 import os
 import sys
-
 from collections import namedtuple
+
+import xlwings as xw
 
 from xl_populate_named_ranges import update_named_ranges, write_named_ranges
 
-import xlwings as xw
 
 # TODO: Set up logging for tests
 class ConsoleSession:
@@ -30,7 +30,9 @@ class ConsoleSession:
         if not self.excel_workbook:
             self.load_workbook()
         if self.json_file and self.excel_workbook:
-            undo_buffer = update_named_ranges(self.json_file, self.excel_workbook, backup)
+            undo_buffer = update_named_ranges(
+                self.json_file, self.excel_workbook, backup
+            )
             # Do not clear undo buffer to None on abort
             if undo_buffer:
                 self.undo_buffer = undo_buffer
@@ -42,11 +44,11 @@ class ConsoleSession:
         # ideally I can make update_named_ranges flexible to taking
         # either a JSON file name or an undo buffer as an argument
         if self.undo_buffer:
-            self.undo_buffer = write_named_ranges(self.excel_workbook,\
-                self.undo_buffer, "UNDO OPERATION", False)
+            self.undo_buffer = write_named_ranges(
+                self.excel_workbook, self.undo_buffer, "UNDO OPERATION", False
+            )
         else:
             print("No undo history available.")
-
 
     def status(self):
         """Display loaded measurement & loaded workbook"""
@@ -67,7 +69,7 @@ def user_select_item(item_list, item_type="choice"):
     print(f"Available {item_type}s:")
     for index, element in enumerate(item_list):
         print(f"[{index}] - {element}")
-    
+
     # keep asking for input until a valid input or quit command received
     while True:
         print(f"Select {item_type} index (q to quit): ", end="")
@@ -176,7 +178,7 @@ def main():
         (["lw"], cs.load_workbook),
         (["s"], cs.status),
         (["u"], cs.update_named_ranges),
-        (["z","undo"], cs.undo_last_update)
+        (["z", "undo"], cs.undo_last_update),
     ]
     console(cs, command_list)
 
