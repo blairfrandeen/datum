@@ -29,11 +29,28 @@ class TestXL(unittest.TestCase):
         self.app.books[0].close()
 
     def test_get_named_range(self):
+        print("TEST GET")
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "non-existant range"))
-        self.assertIsNotNone(xlpnr.xw_get_named_range(self.workbook, "DIPSTICK"))
+        self.assertIsInstance(
+            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK"),xw.Range
+            )
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "missing_ref"))
 
+    def test_write_named_range(self):
+        print("WRITE_NORMAL")
+        testvalue = 700_000
+        xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue)
+        result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
+        self.assertEqual(testvalue, result)
+    
+    def test_write_empty_range(self):
+        print("WRITE EMPTY")
+        xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None)
+        result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
+        self.assertIsNone(result)
+
     def test_read_named_range(self):
+        print("READ NAMED RANGES")
         test_ranges = {
             "Test_Int": 4,
             "Test_Float": 3.141519,

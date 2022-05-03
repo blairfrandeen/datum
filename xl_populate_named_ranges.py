@@ -60,10 +60,7 @@ def read_named_range(workbook, range_name):
     if rng is None:
         return None
 
-    if rng.value is None:
-        return 0
-    else:
-        return rng.value
+    return rng.value
 
 
 def write_named_range(workbook, range_name, new_value):
@@ -135,7 +132,7 @@ def preview_named_range_update(range_update_buffer, workbook):
         )
 
 
-def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
+def write_named_ranges(workbook, range_update_buffer, json_file, backup=False):
 
     preview_named_range_update(range_update_buffer, workbook)
 
