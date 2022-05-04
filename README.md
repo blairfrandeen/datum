@@ -5,8 +5,8 @@ Tools to pull engineering data from dispirate sources and understand performance
 Currently this code includes two modules that allow the user to transfer limited data from measurement features in NX into named ranges in Excel.
 
 ### Requirements
-- Python 3.6 or above
-- NX running on Windows. This code works in NX 1953, may work in earlier verisons in why NXOpen supports Python
+- Python 3.7 or above
+- NX running on Windows. This code works in NX 1953, may work in earlier verisons in which NXOpen supports Python
 - Microsoft Excel
 - Python `xlwings` module
 
@@ -33,4 +33,6 @@ In your Excel file, you'll need to name the cells that you want to autopopulate.
     - `<FEATURE_NAME>` is the name of the feature in NX
     - `expression_name` is the type of expression you want. Examples are `mass`, `area`, or `radius`.
 
-Once the Excel sheet is set up, run `xl_populate_named_ranges.py` from the directory where the JSON file was saved. The script will prompt you to choose the JSON file to read from (searches working directory only), and the Excel file to write to (lists open workbooks detected by xlwings). The script will also give you a preview of values to be overwritten, and prompts you prior to doing so. A backup copy of your file will be saved as `<filename>_BACKUP.xlsx` in the working directory in case you find running this code regrettable.
+Once the Excel sheet is set up, run `datum_console.py` from the directory where the JSON file was saved. The script will prompt you to choose the JSON file to read from (searches working directory only), and the Excel file to write to (lists open workbooks detected by xlwings). The script will also give you a preview of values to be overwritten, and prompts you prior to doing so. Some undo functionality is now built in.
+
+Code exists (currently disabled) to save a backup copy of your file as `<filename>_BACKUP.xlsx` in the working directory in case you find running this code regrettable.
