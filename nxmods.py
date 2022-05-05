@@ -20,6 +20,12 @@ def nxprint(message):
         # if working outside NX, print messages to console
         print(message)
 
+def nxdir(object):
+    """Wrapper for dir() to print on separate lines"""
+    nxprint(f"DIR FOR {object.__str__}:")
+    for item in dir(object):
+        nxprint(item)
+
 
 def main():
     pass
