@@ -7,6 +7,9 @@
 *.xlsx
 !tests/datum_excel_tests.xlsx
 
+# Exclude dev environment
+/py37
+
 journal.py
 __pycache__*
 *.log

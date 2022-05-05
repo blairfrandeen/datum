@@ -60,10 +60,7 @@ def read_named_range(workbook, range_name):
     if rng is None:
         return None
 
-    if rng.value is None:
-        return 0
-    else:
-        return rng.value
+    return rng.value
 
 
 def write_named_range(workbook, range_name, new_value):
@@ -135,7 +132,7 @@ def preview_named_range_update(range_update_buffer, workbook):
         )
 
 
-def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
+def write_named_ranges(workbook, range_update_buffer, source_str, backup=False):
 
     preview_named_range_update(range_update_buffer, workbook)
 
@@ -148,7 +145,7 @@ def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
             workbook = backup_workbook(workbook)
         logger.debug(
             f"Updating named ranges.\n\
-            Source: {json_file}\n\
+            Source: {source_str}\n\
             Target: {workbook.fullname}"
         )
         for range in range_update_buffer.keys():
@@ -158,6 +155,9 @@ def write_named_ranges(workbook, range_update_buffer, json_file, backup=True):
 
 
 def get_json_measurement_names(json_file):
+    # TODO: Test function for valid JSON file
+    # TODO: Test function for empty JSON file or one with no measurements
+    # TODO: test function for broken JSON file
     with open(json_file, "r") as json_file_handle:
         json_data = json.load(json_file_handle)
 
@@ -179,6 +179,8 @@ def get_json_measurement_names(json_file):
 
 
 def get_workbook_range_names(workbook):
+    # TODO: Test function for good workbook
+    # TODO: Test function for workbook with no names
     # make a dict of named ranges, measurement names, and measurement types
     workbook_named_ranges = dict()
     if len(workbook.names) == 0:
@@ -191,7 +193,7 @@ def get_workbook_range_names(workbook):
     return workbook_named_ranges
 
 
-def update_named_ranges(json_file, workbook, backup=True):
+def update_named_ranges(source, target, backup=False):
     """
     Open a JSON file and an excel file. Update the named
     ranges in the excel file with the corresponding JSON values.
@@ -201,22 +203,37 @@ def update_named_ranges(json_file, workbook, backup=True):
     of type "area", along with other expressions. To populate this in
     Excel, we need to name the range "SURFACE_SPHERICAL.area"
     """
+    # Assume target is open excel worksheet
+    # TODO: Implement ability to take .xlsx file path as argument
+    target_data = get_workbook_range_names(target)
+    if not target_data:
+        print("No named ranges in Excel file.")
+        return None
 
-    json_named_measurements = get_json_measurement_names(json_file)
-    workbook_named_ranges = get_workbook_range_names(workbook)
+    # Check if source is json file
+    if isinstance(source, str) and source.lower().endswith('.json'):
+        source_data = get_json_measurement_names(source)
+        if not source_data:
+            print("No measurement data found in JSON file.")
+            return None
+        source_str = source
+
+    elif isinstance(source, dict):
+        source_data = source
+        source_str = "UNDO BUFFER"
 
     # find range names that occur both in Excel and JSON
     ranges_to_update = list(
-        json_named_measurements.keys() & workbook_named_ranges.keys()
+        source_data.keys() & target_data.keys()
     )
 
     range_update_buffer = dict()
     range_undo_buffer = dict()
 
     for range in ranges_to_update:
-        range_update_buffer[range] = json_named_measurements[range]
-        range_undo_buffer[range] = workbook_named_ranges[range]
+        range_update_buffer[range] = source_data[range]
+        range_undo_buffer[range] = target_data[range]
 
-    write_named_ranges(workbook, range_update_buffer, json_file, backup)
+    write_named_ranges(target, range_update_buffer, source_str, backup)
 
     return range_undo_buffer

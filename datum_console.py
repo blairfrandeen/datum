@@ -38,14 +38,9 @@ class ConsoleSession:
                 self.undo_buffer = undo_buffer
 
     def undo_last_update(self):
-        # TODO: Fix this, currently only works once.
-        # Problem is write_named_ranges has no return value
-        # while update_named_ranges returns the undo buffer
-        # ideally I can make update_named_ranges flexible to taking
-        # either a JSON file name or an undo buffer as an argument
         if self.undo_buffer:
-            self.undo_buffer = write_named_ranges(
-                self.excel_workbook, self.undo_buffer, "UNDO OPERATION", False
+            self.undo_buffer = update_named_ranges(
+                self.undo_buffer, self.excel_workbook, backup=False
             )
         else:
             print("No undo history available.")
