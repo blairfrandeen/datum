@@ -1,11 +1,11 @@
 # Only allow specific JSON files
 # keeps export controlled data off of Github
 *.json
-!tests/*.json
+!tests/json/*.json
 
-# Only allow specific excel files
+# Only allow excel from tests folder
 *.xlsx
-!tests/datum_excel_tests.xlsx
+!tests/xl/*.xlsx
 
 # Exclude dev environment
 /py37

@@ -6,9 +6,11 @@ import xlwings as xw
 
 import xl_populate_named_ranges as xlpnr
 
-TEST_JSON_FILE = "tests/nx_measurements_test.json"
-JSON_WITHOUT_USEFUL_DATA = "tests/useless.json"
-TEST_EXCEL_WB = "tests/datum_excel_tests.xlsx"
+# TODO: Restructure so we don't need to call out tests
+# folder for test data files
+TEST_JSON_FILE = "tests/json/nx_measurements_test.json"
+JSON_WITHOUT_USEFUL_DATA = "tests/json/useless.json"
+TEST_EXCEL_WB = "tests/xl/datum_excel_tests.xlsx"
 
 
 class TestJSON(unittest.TestCase):
@@ -22,10 +24,10 @@ class TestJSON(unittest.TestCase):
         non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
         self.assertIsNone(non_existant_json)
 
-        broken_json = xlpnr.get_json_measurement_names("broken.json")
+        broken_json = xlpnr.get_json_measurement_names("tests/xl/broken.json")
         self.assertIsNone(broken_json)
 
-        no_measurements = xlpnr.get_json_measurement_names("no_measurements.json")
+        no_measurements = xlpnr.get_json_measurement_names("tests/xl/no_measurements.json")
         self.assertIsNone(no_measurements)
 
 
