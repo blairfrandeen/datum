@@ -158,7 +158,7 @@ def get_json_measurement_names(json_file):
     try:
         with open(json_file, "r") as json_file_handle:
             json_data = json.load(json_file_handle)
-    except:
+    except FileNotFoundError:
         logger.error(f"Unable to open {json_file}")
         return None
 
