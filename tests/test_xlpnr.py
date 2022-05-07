@@ -7,7 +7,26 @@ import xlwings as xw
 import xl_populate_named_ranges as xlpnr
 
 TEST_JSON_FILE = "tests/nx_measurements_test.json"
+JSON_WITHOUT_USEFUL_DATA = "tests/useless.json"
 TEST_EXCEL_WB = "tests/datum_excel_tests.xlsx"
+
+
+class TestJSON(unittest.TestCase):
+    def test_get_json_measurement_names(self):
+        valid_names = xlpnr.get_json_measurement_names(TEST_JSON_FILE)
+        self.assertIsInstance(valid_names, dict)
+
+        no_names = xlpnr.get_json_measurement_names(JSON_WITHOUT_USEFUL_DATA)
+        self.assertIsNone(no_names)
+
+        non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
+        self.assertIsNone(non_existant_json)
+
+        broken_json = xlpnr.get_json_measurement_names("broken.json")
+        self.assertIsNone(broken_json)
+
+        no_measurements = xlpnr.get_json_measurement_names("no_measurements.json")
+        self.assertIsNone(no_measurements)
 
 
 class TestXL(unittest.TestCase):
@@ -31,16 +50,25 @@ class TestXL(unittest.TestCase):
     def test_get_named_range(self):
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "non-existant range"))
         self.assertIsInstance(
-            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK"),xw.Range
-            )
+            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK"), xw.Range
+        )
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "missing_ref"))
+
+    def test_get_workbook_range_names(self):
+        valid_workbook = xlpnr.get_workbook_range_names(self.workbook)
+        self.assertIsInstance(valid_workbook, dict)
+
+        blank_wb = self.app.books.add()
+        empty_wb = xlpnr.get_workbook_range_names(blank_wb)
+        self.assertIsNone(empty_wb)
+        blank_wb.close()
 
     def test_write_named_range(self):
         testvalue = 700_000
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue)
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
         self.assertEqual(testvalue, result)
-    
+
     def test_write_empty_range(self):
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None)
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")

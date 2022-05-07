@@ -155,16 +155,21 @@ def write_named_ranges(workbook, range_update_buffer, source_str, backup=False):
 
 
 def get_json_measurement_names(json_file):
-    # TODO: Test function for valid JSON file
-    # TODO: Test function for empty JSON file or one with no measurements
-    # TODO: test function for broken JSON file
-    with open(json_file, "r") as json_file_handle:
-        json_data = json.load(json_file_handle)
+    try:
+        with open(json_file, "r") as json_file_handle:
+            json_data = json.load(json_file_handle)
+    except:
+        logger.error(f"Unable to open {json_file}")
+        return None
 
     json_named_measurements = dict()
-    if len(json_data["measurements"]) == 0:
-        # TODO: Error message here?
+    if "measurements" not in json_data.keys():
+        logger.error(f"JSON file {json_file} has no measurement keys.")
         return None
+    if len(json_data["measurements"]) == 0:
+        logger.error(f"JSON file {json_file} has no measurement objects.")
+        return None
+
     for measurement in json_data["measurements"]:
         measurement_name = measurement["name"]
         for expr in measurement["expressions"]:
@@ -179,12 +184,10 @@ def get_json_measurement_names(json_file):
 
 
 def get_workbook_range_names(workbook):
-    # TODO: Test function for good workbook
-    # TODO: Test function for workbook with no names
     # make a dict of named ranges, measurement names, and measurement types
     workbook_named_ranges = dict()
     if len(workbook.names) == 0:
-        # TODO: Error message here?
+        logger.error(f"workbook{workbook.name} has no named ranges.")
         return None
     for named_range in workbook.names:
         range_value = read_named_range(workbook, named_range.name)
@@ -211,7 +214,7 @@ def update_named_ranges(source, target, backup=False):
         return None
 
     # Check if source is json file
-    if isinstance(source, str) and source.lower().endswith('.json'):
+    if isinstance(source, str) and source.lower().endswith(".json"):
         source_data = get_json_measurement_names(source)
         if not source_data:
             print("No measurement data found in JSON file.")
@@ -223,9 +226,7 @@ def update_named_ranges(source, target, backup=False):
         source_str = "UNDO BUFFER"
 
     # find range names that occur both in Excel and JSON
-    ranges_to_update = list(
-        source_data.keys() & target_data.keys()
-    )
+    ranges_to_update = list(source_data.keys() & target_data.keys())
 
     range_update_buffer = dict()
     range_undo_buffer = dict()

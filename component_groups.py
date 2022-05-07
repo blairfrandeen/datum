@@ -2,9 +2,10 @@
 # Journal created by frandeen on Wed May  4 14:35:13 2022 Pacific Daylight Time
 #
 import math
+
 import NXOpen
 
-from nxmods import nxprint, nxdir
+from nxmods import nxdir, nxprint
 
 # Component groups that NX makes by default
 DEFAULT_COMPONENT_GROUPS = [
