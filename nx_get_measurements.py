@@ -81,7 +81,7 @@ def get_WCS(nxSession):
         "name": "World Coordinate System",
         "expressions": [
             {
-                "description": "WCS",
+                "name": "WCS",
                 "type": "Point",
                 "value": {
                     "x": nxSession.Parts.Work.WCS.Origin.X,
@@ -113,19 +113,29 @@ def export_measurements(json_export_file, nxSession=None):
     for feature in workPart.Features:
         if "MEASUREMENT" in feature.FeatureType:
             num_measurements_found += 1
-            # nxprint(f'{feature.Name}')
+            point_count = 0
             current_feature = {"name": feature.Name, "expressions": []}
             for expr in feature.GetExpressions():
                 # typical type string: "p7( Face Measure : area )"
                 # the regex below extracts "area"
-                expr_description = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
-                if expr_description is not None:
-                    expr_description = expr_description[0]
+                expr_name = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
+                if expr_name is None:
+                    if expr.Type == "Point":
+                        point_count += 1
+                        expr_name = f"point_{point_count}"
+                    elif expr.Type == "Number":
+                        if expr.Units.Name == "Degrees":
+                            expr_name = "angle"
+                        else:
+                            expr_name = "distance"
+                    else:
+                        expr_name = "UNKNOWN"
+                else:
+                    expr_name = expr_name[0]
                 # if no expression type, likely a distance measurement.
                 # leave this as None / null
                 current_expr = {
-                    # "type": expr_type,
-                    "description": expr_description,
+                    "name": expr_name,
                     "type": expr.Type,
                 }
 

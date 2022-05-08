@@ -173,9 +173,19 @@ def get_json_measurement_names(json_file):
     for measurement in json_data["measurements"]:
         measurement_name = measurement["name"]
         for expr in measurement["expressions"]:
-            range_description = expr["description"]
-            if range_description:
-                range_name = f"{measurement_name}.{range_description}"
+            # TODO: Refactor expr["description"] to expression_name
+            expression_name = expr["description"]
+
+            # TODO: Deal with measurements that have multiple expressions
+            # of the same name. For example, in the test file, "SHAFT_CENTERS"
+            # has four expressions with description "null": One distance measurement,
+            # two points, and one angle.
+            if expr["type"] == "Point" or expr["type"] == "Vector":
+                pass
+            elif expr["type"] == "List":
+                pass
+            if expression_name:
+                range_name = f"{measurement_name}.{expression_name}"
             else:
                 range_name = measurement_name
             json_named_measurements[range_name] = expr["value"]
