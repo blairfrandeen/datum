@@ -173,9 +173,9 @@ def get_json_measurement_names(json_file):
     for measurement in json_data["measurements"]:
         measurement_name = measurement["name"]
         for expr in measurement["expressions"]:
-            range_type = expr["type"]
-            if range_type:
-                range_name = f"{measurement_name}.{range_type}"
+            range_description = expr["description"]
+            if range_description:
+                range_name = f"{measurement_name}.{range_description}"
             else:
                 range_name = measurement_name
             json_named_measurements[range_name] = expr["value"]

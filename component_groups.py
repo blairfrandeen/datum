@@ -4,6 +4,8 @@
 import math
 
 import NXOpen
+import NXOpen.UF
+import NXOpen.UIStyler
 
 from nxmods import nxdir, nxprint
 
@@ -14,13 +16,12 @@ DEFAULT_COMPONENT_GROUPS = [
     "UnloadedChangedComponents",
     "CurrentComponents"
 ]
-def main() : 
 
+def main(): 
     theSession  = NXOpen.Session.GetSession()
     workPart = theSession.Parts.Work
     displayPart = theSession.Parts.Display
     
-    nxprint("hi")
     nxprint(workPart)
     # nxdir(workPart)
     # nxdir(workPart.MeasureManager)
