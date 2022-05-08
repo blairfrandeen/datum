@@ -185,7 +185,9 @@ def get_json_measurement_names(json_file):
                     range_name = f"{measurement_name}.{expression_name}.{coordinate}"
                     json_named_measurements[range_name] = expr["value"][coordinate]
             elif expr["type"] == "List":
-                pass
+                for index in range(3):
+                    range_name = f"{measurement_name}.{expression_name}.{index}"
+                    json_named_measurements[range_name] = expr["value"][index]
             else:
                 range_name = f"{measurement_name}.{expression_name}"
                 json_named_measurements[range_name] = expr["value"]
