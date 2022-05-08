@@ -121,6 +121,8 @@ def export_measurements(json_export_file, nxSession=None):
                 expr_name = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
                 if expr_name is None:
                     if expr.Type == "Point":
+                        # TODO: If only a single point in expression, name it "point"
+                        # instead of "point_1"
                         point_count += 1
                         expr_name = f"point_{point_count}"
                     elif expr.Type == "Number":

@@ -52,7 +52,7 @@ class TestXL(unittest.TestCase):
     def test_get_named_range(self):
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "non-existant range"))
         self.assertIsInstance(
-            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK"), xw.Range
+            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK.angle"), xw.Range
         )
         self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "missing_ref"))
 
@@ -96,13 +96,13 @@ class TestXL(unittest.TestCase):
         self.assertIsInstance(valid_workbook, xw.Book)
 
     def test_update(self):
-        xlpnr.write_named_range(self.workbook, "DIPSTICK", 95)  # should be: 90
+        xlpnr.write_named_range(self.workbook, "DIPSTICK.angle", 95)  # should be: 90
         xlpnr.write_named_range(self.workbook, "GEARS.mass", 45)  # should be: 55.456
 
         # confirm overwrite automatically
         with patch("builtins.input", return_value="y"):
             xlpnr.update_named_ranges(self.json_file, self.workbook, backup=False)
-        updated_value = xlpnr.read_named_range(self.workbook, "DIPSTICK")
+        updated_value = xlpnr.read_named_range(self.workbook, "DIPSTICK.angle")
         self.assertEqual(updated_value, 90)
         updated_value = xlpnr.read_named_range(self.workbook, "GEARS.mass")
         self.assertAlmostEqual(updated_value, 54.456, places=2)

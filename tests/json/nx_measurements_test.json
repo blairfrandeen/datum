@@ -749,7 +749,7 @@
             ]
         },
         {
-            "name": "SHAFT CENTERS",
+            "name": "SHAFT_CENTERS",
             "expressions": [
                 {
                     "name": "distance",

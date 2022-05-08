@@ -118,7 +118,10 @@ def preview_named_range_update(range_update_buffer, workbook):
     for range_name in range_update_buffer.keys():
         json_value = range_update_buffer[range_name]
         # TODO: Better handling of non-float values.
-        excel_value = float(read_named_range(workbook, range_name))
+        try:
+            excel_value = float(read_named_range(workbook, range_name))
+        except TypeError:
+            excel_value = 0.0
 
         try:
             percent_change = (json_value - excel_value) / excel_value * 100
@@ -172,23 +175,20 @@ def get_json_measurement_names(json_file):
 
     for measurement in json_data["measurements"]:
         measurement_name = measurement["name"]
+        # replace spaces with underscores - no spaces allowed in excel range names
+        measurement_name = measurement_name.replace(' ','_')
         for expr in measurement["expressions"]:
-            # TODO: Refactor expr["description"] to expression_name
-            expression_name = expr["description"]
+            expression_name = expr["name"]
 
-            # TODO: Deal with measurements that have multiple expressions
-            # of the same name. For example, in the test file, "SHAFT_CENTERS"
-            # has four expressions with description "null": One distance measurement,
-            # two points, and one angle.
             if expr["type"] == "Point" or expr["type"] == "Vector":
-                pass
+                for coordinate in ['x', 'y', 'z']:
+                    range_name = f"{measurement_name}.{expression_name}.{coordinate}"
+                    json_named_measurements[range_name] = expr["value"][coordinate]
             elif expr["type"] == "List":
                 pass
-            if expression_name:
-                range_name = f"{measurement_name}.{expression_name}"
             else:
-                range_name = measurement_name
-            json_named_measurements[range_name] = expr["value"]
+                range_name = f"{measurement_name}.{expression_name}"
+                json_named_measurements[range_name] = expr["value"]
 
     return json_named_measurements
 
