@@ -65,13 +65,20 @@ def read_named_range(workbook, range_name):
 
 def write_named_range(workbook, range_name, new_value):
     rng = xw_get_named_range(workbook, range_name)
-    if rng.size > 1:
-        logger.warning(f"range {rng.name} has size {rng.size}")
-        logger.warning("Sizes larger than 1 not supported.")
     if rng is None:
         return None
 
-    rng.value = new_value
+    if isinstance(new_value, list):
+        vector_length = len(new_value)
+        # ensure list is correct size for range
+        # TODO: Unit test for this case
+        if vector_length != rng.size:
+            logger.warning(f"range {rng.name} has size {rng.size}.")
+            logger.warning(f"Vector of length {vector_length} will be truncated.")
+        for index in range(rng.size):
+            rng[index].value = new_value[index]
+    else:
+        rng.value = new_value
 
 
 def backup_workbook(workbook):
@@ -127,6 +134,10 @@ def preview_named_range_update(range_update_buffer, workbook):
             percent_change = (json_value - excel_value) / excel_value * 100
         except ZeroDivisionError:
             percent_change = 100.0
+        except TypeError:
+            # TODO: ALL THE TECH DEBT
+            # TODO: ALL THE TIME
+            continue
         # TODO: Better handling of empty values or zero values in Excel
         print(
             "{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%".format(
@@ -179,17 +190,20 @@ def get_json_measurement_names(json_file):
         measurement_name = measurement_name.replace(' ','_')
         for expr in measurement["expressions"]:
             expression_name = expr["name"]
-
+            range_name = f"{measurement_name}.{expression_name}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
+                vector = []
                 for coordinate in ['x', 'y', 'z']:
-                    range_name = f"{measurement_name}.{expression_name}.{coordinate}"
-                    json_named_measurements[range_name] = expr["value"][coordinate]
+                    coordinate_name = f"{range_name}.{coordinate}"
+                    json_named_measurements[coordinate_name] = expr["value"][coordinate]
+                    vector.append(expr["value"][coordinate])
+                json_named_measurements[range_name] = vector
             elif expr["type"] == "List":
+                json_named_measurements[range_name] = expr["value"]
                 for index in range(3):
-                    range_name = f"{measurement_name}.{expression_name}.{index}"
+                    range_name = f"{range_name}.{index}"
                     json_named_measurements[range_name] = expr["value"][index]
             else:
-                range_name = f"{measurement_name}.{expression_name}"
                 json_named_measurements[range_name] = expr["value"]
 
     return json_named_measurements

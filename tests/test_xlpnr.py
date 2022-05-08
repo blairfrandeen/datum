@@ -88,6 +88,24 @@ class TestXL(unittest.TestCase):
             expected_value = test_ranges[named_range]
             read_value = xlpnr.read_named_range(self.workbook, named_range)
             self.assertEqual(read_value, expected_value)
+    
+    def test_read_named_vector_range(self):
+        horizontal_range = "AIR_NUT.point"
+        vertical_range = "HOUSING.moments_of_inertia_centroidal"
+        vertical_range_value = xlpnr.read_named_range(self.workbook, vertical_range)
+        horizontal_range_value = xlpnr.read_named_range(self.workbook, horizontal_range)
+        self.assertIsInstance(vertical_range_value, list)
+        self.assertIsInstance(horizontal_range_value, list)
+
+    def test_write_named_vector_range(self):
+        horizontal_range = "AIR_NUT.point"
+        vertical_range = "HOUSING.moments_of_inertia_centroidal"
+        xlpnr.write_named_range(self.workbook, horizontal_range, [3.0, 2.11, 9.99])
+        xlpnr.write_named_range(self.workbook, vertical_range, [0.012, 0.11, 0.99])
+        vertical_result = xlpnr.read_named_range(self.workbook, vertical_range)
+        horizontal_result = xlpnr.read_named_range(self.workbook, horizontal_range)
+        self.assertEqual(vertical_result[1], 0.11)
+        self.assertEqual(horizontal_result[2], 9.99)
 
     def test_get_workbook(self):
         non_existant_workbook = xlpnr.xw_get_workbook("DNE.xlsx")
