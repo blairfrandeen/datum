@@ -1,32 +1,60 @@
 {
     "measurements": [
         {
+            "name": "World Coordinate System",
+            "expressions": [
+                {
+                    "description": "WCS",
+                    "type": "Point",
+                    "value": {
+                        "x": 669.0491226844025,
+                        "y": 757.9999999999995,
+                        "z": 74.99999999999994
+                    }
+                }
+            ]
+        },
+        {
             "name": "SURFACE_PAINTED",
             "expressions": [
                 {
-                    "type": "area",
-                    "value": 731851.4496561459,
-                    "units": "SquareMilliMeter"
+                    "description": "area",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 731851.4496561459
                 },
                 {
-                    "type": "perimeter",
-                    "value": 67824.5565967054,
-                    "units": "MilliMeter"
+                    "description": "perimeter",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 67824.5565967054
                 },
                 {
-                    "type": "arc_size",
-                    "value": 0.0,
-                    "units": "MilliMeter"
+                    "description": "arc_size",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 0.0
                 },
                 {
-                    "type": "minimum_radius",
-                    "value": 2.999999999999707,
-                    "units": "MilliMeter"
+                    "description": "centroid",
+                    "type": "Point",
+                    "value": {
+                        "x": 820.821690740676,
+                        "y": 927.5574564945198,
+                        "z": 248.3774953255871
+                    }
                 },
                 {
-                    "type": "error_estimate",
-                    "value": 116.28934454029633,
-                    "units": "SquareMilliMeter"
+                    "description": "minimum_radius",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 2.999999999999707
+                },
+                {
+                    "description": "error_estimate",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 116.28934454029633
                 }
             ]
         },
@@ -34,59 +62,205 @@
             "name": "HOUSING",
             "expressions": [
                 {
-                    "type": "surface_area",
-                    "value": 1947140.8285505488,
-                    "units": "SquareMilliMeter"
+                    "description": "surface_area",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 1947140.8285505488
                 },
                 {
-                    "type": "volume",
-                    "value": 16454655.731777554,
-                    "units": "CubicMilliMeter"
+                    "description": "volume",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 16454655.731777554
                 },
                 {
-                    "type": "mass",
-                    "value": 128.8504853594866,
-                    "units": "Kilogram"
+                    "description": "center_of_mass",
+                    "type": "Point",
+                    "value": {
+                        "x": 828.2824889932035,
+                        "y": 933.800046864635,
+                        "z": 196.66100368530556
+                    }
                 },
                 {
-                    "type": "weight",
-                    "value": 1263591.6122506093,
-                    "units": "Newton"
+                    "description": "mass",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 128.8504853594866
                 },
                 {
-                    "type": "density",
-                    "value": 7.83064e-06,
-                    "units": "KilogramPerCubicMilliMeter"
+                    "description": "weight",
+                    "type": "Number",
+                    "units": "Newton",
+                    "value": 1263591.6122506093
                 },
                 {
-                    "type": "moments_of_inertia_spherical",
-                    "value": 5458715.923546972,
-                    "units": "KilogramMilliMeterSquared"
+                    "description": "density",
+                    "type": "Number",
+                    "units": "KilogramPerCubicMilliMeter",
+                    "value": 7.83064e-06
                 },
                 {
-                    "type": "radii_of_gyration_spherical",
-                    "value": 205.82694000318057,
-                    "units": "MilliMeter"
+                    "description": "first_moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        106724.6007215379,
+                        120320.58926721955,
+                        25339.865776135408
+                    ]
                 },
                 {
-                    "type": "area_error_estimate",
-                    "value": 652.2349334965317,
-                    "units": "SquareMilliMeter"
+                    "description": "moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        120072772.19680601,
+                        97215090.54343472,
+                        205103275.61832738
+                    ]
                 },
                 {
-                    "type": "volume_error_estimate",
-                    "value": 41239.07148381387,
-                    "units": "CubicMilliMeter"
+                    "description": "moments_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        2734036.863510197,
+                        3833609.1842077454,
+                        4349785.7993760025
+                    ]
                 },
                 {
-                    "type": "mass_error_estimate",
-                    "value": 0.3229283227240103,
-                    "units": "Kilogram"
+                    "description": "moments_of_inertia_spherical",
+                    "type": "Number",
+                    "units": "KilogramMilliMeterSquared",
+                    "value": 5458715.923546972
                 },
                 {
-                    "type": "radius_for_cog_error_estimate",
-                    "value": 6.9652413424292,
-                    "units": "MilliMeter"
+                    "description": "products_of_inertia",
+                    "type": "List",
+                    "value": [
+                        23654017.177892864,
+                        20940068.28652626,
+                        99685646.647824
+                    ]
+                },
+                {
+                    "description": "products_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        -8350.67140593454,
+                        -48498.80928487333,
+                        26209.492442448263
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration",
+                    "type": "List",
+                    "value": [
+                        965.3376379039199,
+                        868.6079762754582,
+                        1261.6627147515474
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_centroidal",
+                    "type": "List",
+                    "value": [
+                        145.66632163617487,
+                        172.48879530583662,
+                        183.73458220235364
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_spherical",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 205.82694000318057
+                },
+                {
+                    "description": "principal_axes_xp",
+                    "type": "Vector",
+                    "value": {
+                        "x": 0.029733951112228117,
+                        "y": 0.014614965034357767,
+                        "z": 0.9994509967718779
+                    }
+                },
+                {
+                    "description": "principal_axes_yp",
+                    "type": "Vector",
+                    "value": {
+                        "x": -0.0244276821777759,
+                        "y": 0.9996050933689984,
+                        "z": -0.013890487902793631
+                    }
+                },
+                {
+                    "description": "principal_axes_zp",
+                    "type": "Vector",
+                    "value": {
+                        "x": 0.999259315940901,
+                        "y": 0.024001252213178097,
+                        "z": -0.03007921869866662
+                    }
+                },
+                {
+                    "description": "principal_moments",
+                    "type": "List",
+                    "value": [
+                        4351350.76454182,
+                        3834133.6335675563,
+                        2731947.44898457
+                    ]
+                },
+                {
+                    "description": "area_error_estimate",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 652.2349334965317
+                },
+                {
+                    "description": "volume_error_estimate",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 41239.07148381387
+                },
+                {
+                    "description": "mass_error_estimate",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 0.3229283227240103
+                },
+                {
+                    "description": "radius_for_cog_error_estimate",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 6.9652413424292
+                },
+                {
+                    "description": "cog_error_estimate",
+                    "type": "List",
+                    "value": [
+                        1167.1998762342923,
+                        1201.2744842156735,
+                        963.2314093873653
+                    ]
+                },
+                {
+                    "description": "moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        2683857.1692457693,
+                        2433941.538849993,
+                        4029483.342216537
+                    ]
+                },
+                {
+                    "description": "principal_moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        1498383.3146851992,
+                        739632.540702459,
+                        637994.7147188431
+                    ]
                 }
             ]
         },
@@ -94,59 +268,205 @@
             "name": "FASTENERS",
             "expressions": [
                 {
-                    "type": "surface_area",
-                    "value": 206622.11269042993,
-                    "units": "SquareMilliMeter"
+                    "description": "surface_area",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 206622.11269042993
                 },
                 {
-                    "type": "volume",
-                    "value": 485739.65899806167,
-                    "units": "CubicMilliMeter"
+                    "description": "volume",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 485739.65899806167
                 },
                 {
-                    "type": "mass",
-                    "value": 3.802923032687038,
-                    "units": "Kilogram"
+                    "description": "center_of_mass",
+                    "type": "Point",
+                    "value": {
+                        "x": 819.2518154158819,
+                        "y": 926.8589023704778,
+                        "z": 262.3382167678384
+                    }
                 },
                 {
-                    "type": "weight",
-                    "value": 37293.93515850034,
-                    "units": "Newton"
+                    "description": "mass",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 3.802923032687038
                 },
                 {
-                    "type": "density",
-                    "value": 7.829138432985587e-06,
-                    "units": "KilogramPerCubicMilliMeter"
+                    "description": "weight",
+                    "type": "Number",
+                    "units": "Newton",
+                    "value": 37293.93515850034
                 },
                 {
-                    "type": "moments_of_inertia_spherical",
-                    "value": 185237.86339498416,
-                    "units": "KilogramMilliMeterSquared"
+                    "description": "density",
+                    "type": "Number",
+                    "units": "KilogramPerCubicMilliMeter",
+                    "value": 7.829138432985587e-06
                 },
                 {
-                    "type": "radii_of_gyration_spherical",
-                    "value": 220.70192115625818,
-                    "units": "MilliMeter"
+                    "description": "first_moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        3115.551598415727,
+                        3524.7730678757166,
+                        997.6520469004577
+                    ]
                 },
                 {
-                    "type": "area_error_estimate",
-                    "value": 18.728861384570415,
-                    "units": "SquareMilliMeter"
+                    "description": "moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        3622060.2331439313,
+                        2922219.2604859434,
+                        5988417.950677884
+                    ]
                 },
                 {
-                    "type": "volume_error_estimate",
-                    "value": 59.358526351084485,
-                    "units": "CubicMilliMeter"
+                    "description": "moments_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        93370.67740897206,
+                        108075.69852335694,
+                        169029.35085763928
+                    ]
                 },
                 {
-                    "type": "mass_error_estimate",
-                    "value": 0.00046478600363419886,
-                    "units": "Kilogram"
+                    "description": "moments_of_inertia_spherical",
+                    "type": "Number",
+                    "units": "KilogramMilliMeterSquared",
+                    "value": 185237.86339498416
                 },
                 {
-                    "type": "radius_for_cog_error_estimate",
-                    "value": 0.3164404719435524,
-                    "units": "MilliMeter"
+                    "description": "products_of_inertia",
+                    "type": "List",
+                    "value": [
+                        924681.392139719,
+                        819552.5382758839,
+                        2887360.2509455997
+                    ]
+                },
+                {
+                    "description": "products_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        -1.2889980996131636,
+                        2224.2876993136465,
+                        -316.4838405885842
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration",
+                    "type": "List",
+                    "value": [
+                        975.9308938875747,
+                        876.5922597249072,
+                        1254.8658017634457
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_centroidal",
+                    "type": "List",
+                    "value": [
+                        156.69187842343385,
+                        168.57969263962858,
+                        210.82508975401996
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_spherical",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 220.70192115625818
+                },
+                {
+                    "description": "principal_axes_xp",
+                    "type": "Vector",
+                    "value": {
+                        "x": -0.02936149597676854,
+                        "y": -0.00013117222734220746,
+                        "z": 0.9995688497286483
+                    }
+                },
+                {
+                    "description": "principal_axes_yp",
+                    "type": "Vector",
+                    "value": {
+                        "x": 0.021392481946741232,
+                        "y": 0.9997708661222723,
+                        "z": 0.000759584939206096
+                    }
+                },
+                {
+                    "description": "principal_axes_zp",
+                    "type": "Vector",
+                    "value": {
+                        "x": 0.9993399142785026,
+                        "y": -0.02140556112248152,
+                        "z": 0.029351962163834164
+                    }
+                },
+                {
+                    "description": "principal_moments",
+                    "type": "List",
+                    "value": [
+                        169094.68727270621,
+                        108082.47142920889,
+                        93298.5680880532
+                    ]
+                },
+                {
+                    "description": "area_error_estimate",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 18.728861384570415
+                },
+                {
+                    "description": "volume_error_estimate",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 59.358526351084485
+                },
+                {
+                    "description": "mass_error_estimate",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 0.00046478600363419886
+                },
+                {
+                    "description": "radius_for_cog_error_estimate",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 0.3164404719435524
+                },
+                {
+                    "description": "cog_error_estimate",
+                    "type": "List",
+                    "value": [
+                        1.5843226135880961,
+                        1.634336881496612,
+                        1.32547696770291
+                    ]
+                },
+                {
+                    "description": "moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        4960.215957231284,
+                        4613.865385067584,
+                        6580.722913393622
+                    ]
+                },
+                {
+                    "description": "principal_moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        789.1534180641813,
+                        121.03101601335098,
+                        263.66173133329784
+                    ]
                 }
             ]
         },
@@ -154,59 +474,205 @@
             "name": "GEARS",
             "expressions": [
                 {
-                    "type": "surface_area",
-                    "value": 1186755.074478255,
-                    "units": "SquareMilliMeter"
+                    "description": "surface_area",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 1186755.074478255
                 },
                 {
-                    "type": "volume",
-                    "value": 6954168.887863808,
-                    "units": "CubicMilliMeter"
+                    "description": "volume",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 6954168.887863808
                 },
                 {
-                    "type": "mass",
-                    "value": 54.45559306006185,
-                    "units": "Kilogram"
+                    "description": "center_of_mass",
+                    "type": "Point",
+                    "value": {
+                        "x": 840.2290943837642,
+                        "y": 911.1087118636385,
+                        "z": 262.66120769297316
+                    }
                 },
                 {
-                    "type": "weight",
-                    "value": 534026.9416824556,
-                    "units": "Newton"
+                    "description": "mass",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 54.45559306006185
                 },
                 {
-                    "type": "density",
-                    "value": 7.83064e-06,
-                    "units": "KilogramPerCubicMilliMeter"
+                    "description": "weight",
+                    "type": "Number",
+                    "units": "Newton",
+                    "value": 534026.9416824556
                 },
                 {
-                    "type": "moments_of_inertia_spherical",
-                    "value": 1229901.5714459931,
-                    "units": "KilogramMilliMeterSquared"
+                    "description": "density",
+                    "type": "Number",
+                    "units": "KilogramPerCubicMilliMeter",
+                    "value": 7.83064e-06
                 },
                 {
-                    "type": "radii_of_gyration_spherical",
-                    "value": 150.28441049896287,
-                    "units": "MilliMeter"
+                    "description": "first_moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        45755.17364098656,
+                        49614.96524672344,
+                        14303.371838792937
+                    ]
                 },
                 {
-                    "type": "area_error_estimate",
-                    "value": 243.96289677175443,
-                    "units": "SquareMilliMeter"
+                    "description": "moments_of_inertia",
+                    "type": "List",
+                    "value": [
+                        49742259.129638456,
+                        42772542.063942894,
+                        84757794.16550748
+                    ]
                 },
                 {
-                    "type": "volume_error_estimate",
-                    "value": 14474.208616924514,
-                    "units": "CubicMilliMeter"
+                    "description": "moments_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        780691.1332780452,
+                        570773.0309458635,
+                        1108338.9786680776
+                    ]
                 },
                 {
-                    "type": "mass_error_estimate",
-                    "value": 0.11334231696402952,
-                    "units": "Kilogram"
+                    "description": "moments_of_inertia_spherical",
+                    "type": "Number",
+                    "units": "KilogramMilliMeterSquared",
+                    "value": 1229901.5714459931
                 },
                 {
-                    "type": "radius_for_cog_error_estimate",
-                    "value": 5.567146625604381,
-                    "units": "MilliMeter"
+                    "description": "products_of_inertia",
+                    "type": "List",
+                    "value": [
+                        13035194.282688508,
+                        12023310.348997952,
+                        41524003.33998128
+                    ]
+                },
+                {
+                    "description": "products_of_inertia_centroidal",
+                    "type": "List",
+                    "value": [
+                        3267.5913392343223,
+                        5201.182254727895,
+                        -163933.9771550968
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration",
+                    "type": "List",
+                    "value": [
+                        955.7438381221749,
+                        886.260278399499,
+                        1247.5804962886357
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_centroidal",
+                    "type": "List",
+                    "value": [
+                        119.7342442576736,
+                        102.378904043099,
+                        142.66421708690393
+                    ]
+                },
+                {
+                    "description": "radii_of_gyration_spherical",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 150.28441049896287
+                },
+                {
+                    "description": "principal_axes_xp",
+                    "type": "Vector",
+                    "value": {
+                        "x": -0.022299072156599816,
+                        "y": -0.012872929274644763,
+                        "z": 0.9996684645785545
+                    }
+                },
+                {
+                    "description": "principal_axes_yp",
+                    "type": "Vector",
+                    "value": {
+                        "x": 0.8769907466572658,
+                        "y": 0.4798172750151496,
+                        "z": 0.02574126792851474
+                    }
+                },
+                {
+                    "description": "principal_axes_zp",
+                    "type": "Vector",
+                    "value": {
+                        "x": -0.47998956411414406,
+                        "y": 0.8772739995514095,
+                        "z": 0.0005899598186909692
+                    }
+                },
+                {
+                    "description": "principal_moments",
+                    "type": "List",
+                    "value": [
+                        1108497.0760935803,
+                        870229.6711409518,
+                        481076.3956574541
+                    ]
+                },
+                {
+                    "description": "area_error_estimate",
+                    "type": "Number",
+                    "units": "SquareMilliMeter",
+                    "value": 243.96289677175443
+                },
+                {
+                    "description": "volume_error_estimate",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 14474.208616924514
+                },
+                {
+                    "description": "mass_error_estimate",
+                    "type": "Number",
+                    "units": "Kilogram",
+                    "value": 0.11334231696402952
+                },
+                {
+                    "description": "radius_for_cog_error_estimate",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 5.567146625604381
+                },
+                {
+                    "description": "cog_error_estimate",
+                    "type": "List",
+                    "value": [
+                        399.02677678507814,
+                        407.0604368557724,
+                        333.5638943035235
+                    ]
+                },
+                {
+                    "description": "moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        1151643.280688944,
+                        1094508.12733067,
+                        1574764.126398989
+                    ]
+                },
+                {
+                    "description": "principal_moments_error_estimate",
+                    "type": "List",
+                    "value": [
+                        287317.2174808474,
+                        52212.181210627765,
+                        28569.299977295515
+                    ]
                 }
             ]
         },
@@ -214,24 +680,46 @@
             "name": "BOUNDING",
             "expressions": [
                 {
-                    "type": "length",
-                    "value": 546.0,
-                    "units": "MilliMeter"
+                    "description": "length",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 546.0
                 },
                 {
-                    "type": "width",
-                    "value": 557.9999999999995,
-                    "units": "MilliMeter"
+                    "description": "width",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 557.9999999999995
                 },
                 {
-                    "type": "height",
-                    "value": 375.0844353738772,
-                    "units": "MilliMeter"
+                    "description": "height",
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 375.0844353738772
                 },
                 {
-                    "type": "volume",
-                    "value": 114276224.75648834,
-                    "units": "CubicMilliMeter"
+                    "description": "volume",
+                    "type": "Number",
+                    "units": "CubicMilliMeter",
+                    "value": 114276224.75648834
+                },
+                {
+                    "description": "length",
+                    "type": "Point",
+                    "value": {
+                        "x": 546.9999999999989,
+                        "y": 641.0000000000002,
+                        "z": 75.00000000000013
+                    }
+                },
+                {
+                    "description": "length",
+                    "type": "Point",
+                    "value": {
+                        "x": 1092.9999999999989,
+                        "y": 1198.9999999999998,
+                        "z": 450.08443537387734
+                    }
                 }
             ]
         },
@@ -239,30 +727,68 @@
             "name": "DIPSTICK",
             "expressions": [
                 {
-                    "type": null,
-                    "value": 90.0,
-                    "units": "Degrees"
+                    "description": null,
+                    "type": "Number",
+                    "units": "Degrees",
+                    "value": 90.0
                 }
             ]
         },
         {
             "name": "AIR NUT",
-            "expressions": []
+            "expressions": [
+                {
+                    "description": null,
+                    "type": "Point",
+                    "value": {
+                        "x": 820.0,
+                        "y": 925.9999999999999,
+                        "z": 439.0844353738773
+                    }
+                }
+            ]
         },
         {
             "name": "SHAFT CENTERS",
             "expressions": [
                 {
-                    "type": null,
-                    "value": 159.9999999999999,
-                    "units": "MilliMeter"
+                    "description": null,
+                    "type": "Number",
+                    "units": "MilliMeter",
+                    "value": 159.9999999999999
                 },
                 {
-                    "type": null,
-                    "value": 0.0,
-                    "units": "Degrees"
+                    "description": null,
+                    "type": "Point",
+                    "value": {
+                        "x": 899.9999999999991,
+                        "y": 865.6389791406957,
+                        "z": 261.00000000000006
+                    }
+                },
+                {
+                    "description": null,
+                    "type": "Point",
+                    "value": {
+                        "x": 739.9999999999992,
+                        "y": 865.638979140698,
+                        "z": 261.0000000000001
+                    }
+                },
+                {
+                    "description": null,
+                    "type": "Number",
+                    "units": "Degrees",
+                    "value": 0.0
                 }
             ]
         }
-    ]
+    ],
+    "part_name": "datum_nx_test_measurements",
+    "part_path": "C:\\Users\\frandeen\\Documents\\datum\\tests\\nx\\datum_nx_test_measurements.prt",
+    "part_rev": null,
+    "part_units": "Millimeters",
+    "retrieval_date": "2022-05-08 05:52:30",
+    "user": "frandeen",
+    "computer": "MT-205700"
 }

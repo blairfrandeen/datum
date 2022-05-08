@@ -39,11 +39,17 @@ def get_metadata(nxSession):
     UNIT_ENUM = {0: "Inches", 1: "Millimeters"}
     metadata = dict()
     workPart = nxSession.Parts.Work
-    metadata["part_name"], metadata["part_rev"]\
-        = workPart.FullPath.split('/')
+    if '/' in workPart.FullPath:
+        metadata["part_name"], metadata["part_rev"]\
+            = workPart.FullPath.split('/')
+    else:
+        metadata["part_name"] = workPart.Name
+        metadata["part_path"] = workPart.FullPath
+        metadata["part_rev"] = None
     metadata["part_units"] = UNIT_ENUM[int(str(workPart.PartUnits))]
     metadata["retrieval_date"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
     metadata["user"] = os.getlogin()
+    metadata["computer"] = os.environ['COMPUTERNAME']
 
     for key in metadata.keys():
         nxprint(f"{key}: {metadata[key]}")

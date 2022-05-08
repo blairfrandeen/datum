@@ -10,9 +10,13 @@
 # Exclude dev environment
 /py37
 
+# For now, leaving NX part files off of Github
+# Part files for NX test can be found here: https://grabcad.com/library/coaxial-gearbox-1
+tests/nx/*
+!tests/nx/datum_nx_test_measurements.prt
+
 journal.py
 __pycache__*
 *.log
 *.swp
-tests/nx/
 nx_get_mp.py
