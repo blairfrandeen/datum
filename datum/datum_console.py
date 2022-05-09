@@ -50,6 +50,10 @@ class ConsoleSession:
         print(f"Loaded Measurement:\t{self.json_file}")
         print(f"Loaded Workbook:\t{self.excel_workbook}")
 
+    def pwd(self):
+        """Display current working directory"""
+        print(os.getcwd())
+
 
 def user_select_item(item_list, item_type="choice"):
     """Given a list of files or workbooks, enumerate them and
@@ -103,7 +107,10 @@ def user_select_open_workbook():
 def user_select_json_file():
     """Select a JSON file"""
     json_file_list = []
-    for file in os.listdir():
+    # TODO: Document structure change for where files
+    # should be kept -- OR -- do recursive directory search
+    # such as os.walk()
+    for file in os.listdir('json'):
         if file.endswith(".json"):
             json_file_list.append(file)
     json_index = user_select_item(json_file_list, "JSON file")
@@ -111,7 +118,7 @@ def user_select_json_file():
         return None
 
     # TODO: Make this compatible with linux/macOS - use pathlib?
-    json_file_path = f"{os.getcwd()}\\{json_file_list[json_index]}"
+    json_file_path = f"{os.getcwd()}\\json\\{json_file_list[json_index]}"
     return json_file_path
 
 
@@ -169,8 +176,10 @@ def main():
         os.chdir("tests")
     cs = ConsoleSession()
     command_list = [
+        (["cd"], os.chdir),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
+        (["pwd"], cs.pwd),
         (["s"], cs.status),
         (["u"], cs.update_named_ranges),
         (["z", "undo"], cs.undo_last_update),
