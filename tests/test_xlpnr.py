@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import xlwings as xw
 
-import xl_populate_named_ranges as xlpnr
+import datum.xl_populate_named_ranges as xlpnr
 
 # TODO: Restructure so we don't need to call out tests
 # folder for test data files
