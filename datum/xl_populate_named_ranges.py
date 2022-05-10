@@ -216,6 +216,10 @@ def get_workbook_range_names(workbook):
         logger.error(f"workbook{workbook.name} has no named ranges.")
         return None
     for named_range in workbook.names:
+        # Sometimes Excel puts in hidden names that start
+        # with _xlfn. -- skip these
+        if named_range.name.startswith('_xlfn.'):
+            continue
         range_value = read_named_range(workbook, named_range.name)
         workbook_named_ranges[named_range.name] = range_value
 
