@@ -21,7 +21,7 @@ import xlwings as xw
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
-logger = logging.getLogger("root")
+logger = logging.getLogger(__name__)
 
 
 def xw_get_workbook(target_workbook):
