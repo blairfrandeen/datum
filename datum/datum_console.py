@@ -61,7 +61,7 @@ def user_select_item(item_list, item_type="choice"):
 
     Return the index of the selected item."""
     if len(item_list) < 1:
-        logger.error("user_select_item passed an empty list.")
+        logger.error(f"Empty list of {item_type}")
         return None
 
     # list the items
@@ -110,7 +110,7 @@ def user_select_json_file():
     # TODO: Document structure change for where files
     # should be kept -- OR -- do recursive directory search
     # such as os.walk()
-    for file in os.listdir('json'):
+    for file in os.listdir():
         if file.endswith(".json"):
             json_file_list.append(file)
     json_index = user_select_item(json_file_list, "JSON file")
@@ -118,7 +118,7 @@ def user_select_json_file():
         return None
 
     # TODO: Make this compatible with linux/macOS - use pathlib?
-    json_file_path = f"{os.getcwd()}\\json\\{json_file_list[json_index]}"
+    json_file_path = f"{os.getcwd()}\\{json_file_list[json_index]}"
     return json_file_path
 
 
