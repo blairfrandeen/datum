@@ -24,11 +24,6 @@ from nxmods import nxprint
 # Change nxprint to be a method of the session so that the LW only
 # has to be opened once.
 
-# TODO: Write the following metadata to JSON
-# Work part
-# Revision
-# Date
-
 # user settable defaults for where to save JSON file
 JSON_DEFAULT_DIR = f"C:\\Users\\{os.getlogin()}\\Documents\\datum"
 JSON_DEFAULT_FILE = "nx_measurements.json"
@@ -47,7 +42,8 @@ def get_metadata(nxSession):
         metadata["part_path"] = workPart.FullPath
         metadata["part_rev"] = None
     metadata["part_units"] = UNIT_ENUM[int(str(workPart.PartUnits))]
-    metadata["retrieval_date"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
+    metadata["retrieval_date"] =\
+        datetime.datetime.today().strftime(DATETIME_FORMAT)
     metadata["user"] = os.getlogin()
     metadata["computer"] = os.environ['COMPUTERNAME']
 
@@ -118,11 +114,12 @@ def export_measurements(json_export_file, nxSession=None):
             for expr in feature.GetExpressions():
                 # typical type string: "p7( Face Measure : area )"
                 # the regex below extracts "area"
-                expr_name = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
+                expr_name = re.search(r"(?<=\d\) )\w+(?=\))",\
+                    expr.Description)
                 if expr_name is None:
                     if expr.Type == "Point":
-                        # TODO: If only a single point in expression, name it "point"
-                        # instead of "point_1"
+                        # TODO: If only a single point in expression, 
+                        # name it "point" instead of "point_1"
                         point_count += 1
                         expr_name = f"point_{point_count}"
                     elif expr.Type == "Number":
@@ -181,7 +178,8 @@ def get_json_file_path():
     """Opens dialog box for user to choose where to save the measurements.
     Uses default directory in case of failure.
 
-    Requires very hacky work-around of installing tk and tcl in NX directories"""
+    Requires very hacky work-around of installing 
+    tk and tcl in NX directories"""
     try:
         import tkinter as tk
         from tkinter import filedialog
