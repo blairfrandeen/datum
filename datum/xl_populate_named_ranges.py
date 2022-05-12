@@ -110,40 +110,60 @@ def backup_workbook(workbook):
 
 def preview_named_range_update(range_update_buffer, workbook):
     """Print out list of values that will be overwritten."""
-
-    print(
-        "{0:<32} {1:>12} {2:>12} {3:>15}".format(
+    column_widths = "{0:<42} {1:>12.3f} {2:>12.3f} {3:>15.2f}"
+    print("")
+    print("{0:<42} {1:>12} {2:>12} {3:>15}".format
+        (
             "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
         )
     )
-    print(
-        "{0:<32} {1:>12} {2:>12} {3:>15}".format(
-            "------------", "------------", "------------", "------------"
-        )
+    print("{0:<42} {1:>12} {2:>12} {3:>15}".format
+        ("-"*20,"-"*12,"-"*12,"-"*15)
     )
 
     for range_name in range_update_buffer.keys():
         json_value = range_update_buffer[range_name]
-        # TODO: Better handling of non-float values.
-        try:
-            excel_value = float(read_named_range(workbook, range_name))
-        except TypeError:
-            excel_value = 0.0
+        excel_value = read_named_range(workbook, range_name)
+        if isinstance(json_value, (list, dict)):
+            for index, json_item in enumerate(json_value):
+                if isinstance(json_value, dict):
+                    item_name = f"{range_name}[{json_item}]"
+                    json_item = json_value[json_item]
+                else:
+                    item_name = f"{range_name}[{index}]"
+                if not isinstance(json_item, (int, float)):
+                    logger.warning("List and dictionary items must be numbers.")
+                    continue
+                try: 
+                    excel_item = excel_value[index]
+                except TypeError: # if excel value not a list
+                    excel_item = excel_value
+                except IndexError: # if excel range not popualted
+                    excel_item = 0.0
 
-        try:
-            percent_change = (json_value - excel_value) / excel_value * 100
-        except ZeroDivisionError:
-            percent_change = 100.0
-        except TypeError:
-            # TODO: ALL THE TECH DEBT
-            # TODO: ALL THE TIME
-            continue
-        # TODO: Better handling of empty values or zero values in Excel
-        print(
-            "{0:<32} {1:>12.5} {2:>12.5} {3:>14.3}%".format(
-                range_name, excel_value, json_value, percent_change
+                if excel_item != 0:
+                    percent_change = (json_item - excel_item) / excel_item * 100
+                else:
+                    percent_change = 100.0
+                print(
+                    f"{column_widths}%".format(
+                        item_name, excel_item, json_item, percent_change
+                    )
+                )
+        elif isinstance(json_value, str):
+            print(f"String handling for {range_name} not implemented.")
+        else:
+            excel_value = float(excel_value)
+            if excel_value != 0:
+                percent_change = (json_value - excel_value) / excel_value * 100
+            else:
+                percent_change = 100.0
+
+            print(
+                f"{column_widths}%".format(
+                    range_name, excel_value, json_value, percent_change
+                )
             )
-        )
 
 
 def write_named_ranges(workbook, range_update_buffer, source_str, backup=False):
@@ -197,6 +217,9 @@ def get_json_measurement_names(json_file):
                     coordinate_name = f"{range_name}.{coordinate}"
                     json_named_measurements[coordinate_name] = expr["value"][coordinate]
                     vector.append(expr["value"][coordinate])
+                # TODO: Keep dicts as dicts, don't conver them to vectors.
+                # Requires update of write_named_range to handle dicts.
+                # json_named_measurements[range_name] = expr["value"]
                 json_named_measurements[range_name] = vector
             elif expr["type"] == "List":
                 json_named_measurements[range_name] = expr["value"]

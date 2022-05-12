@@ -93,7 +93,7 @@ class TestXL(unittest.TestCase):
             self.assertEqual(read_value, expected_value)
     
     def test_read_named_vector_range(self):
-        horizontal_range = "AIR_NUT.point"
+        horizontal_range = "AIR_NUT.point_1"
         vertical_range = "HOUSING.moments_of_inertia_centroidal"
         vertical_range_value = xlpnr.read_named_range(self.workbook, vertical_range)
         horizontal_range_value = xlpnr.read_named_range(self.workbook, horizontal_range)
@@ -101,7 +101,7 @@ class TestXL(unittest.TestCase):
         self.assertIsInstance(horizontal_range_value, list)
 
     def test_write_named_vector_range(self):
-        horizontal_range = "AIR_NUT.point"
+        horizontal_range = "AIR_NUT.point_1"
         vertical_range = "HOUSING.moments_of_inertia_centroidal"
         xlpnr.write_named_range(self.workbook, horizontal_range, [3.0, 2.11, 9.99])
         xlpnr.write_named_range(self.workbook, vertical_range, [0.012, 0.11, 0.99])
