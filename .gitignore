@@ -21,3 +21,4 @@ __pycache__*
 *.log
 *.swp
 nx_get_mp.py
+~$*
