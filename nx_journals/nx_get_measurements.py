@@ -9,15 +9,14 @@ TODO: Make this also work for PMI
 TODO: Be able to take arguments passed through NX interface
 TODO: Implement proper logging
 """
+import datetime
 import json
 import os
 import re
 import sys
-import datetime
 from tkinter import TclError
 
 import NXOpen
-
 from nxmods import nxprint
 
 # TODO: Write a session wrapper that carries around the listing window.
@@ -34,18 +33,16 @@ def get_metadata(nxSession):
     UNIT_ENUM = {0: "Inches", 1: "Millimeters"}
     metadata = dict()
     workPart = nxSession.Parts.Work
-    if '/' in workPart.FullPath:
-        metadata["part_name"], metadata["part_rev"]\
-            = workPart.FullPath.split('/')
+    if "/" in workPart.FullPath:
+        metadata["part_name"], metadata["part_rev"] = workPart.FullPath.split("/")
     else:
         metadata["part_name"] = workPart.Name
         metadata["part_path"] = workPart.FullPath
         metadata["part_rev"] = None
     metadata["part_units"] = UNIT_ENUM[int(str(workPart.PartUnits))]
-    metadata["retrieval_date"] =\
-        datetime.datetime.today().strftime(DATETIME_FORMAT)
+    metadata["retrieval_date"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
     metadata["user"] = os.getlogin()
-    metadata["computer"] = os.environ['COMPUTERNAME']
+    metadata["computer"] = os.environ["COMPUTERNAME"]
 
     for key in metadata.keys():
         nxprint(f"{key}: {metadata[key]}")
@@ -82,13 +79,14 @@ def get_WCS(nxSession):
                 "value": {
                     "x": nxSession.Parts.Work.WCS.Origin.X,
                     "y": nxSession.Parts.Work.WCS.Origin.Y,
-                    "z": nxSession.Parts.Work.WCS.Origin.Z
-                }
+                    "z": nxSession.Parts.Work.WCS.Origin.Z,
+                },
             }
-        ]
+        ],
     }
 
     return wcs
+
 
 def export_measurements(json_export_file, nxSession=None):
     #   Ensure that measruements are updated in the model
@@ -114,11 +112,10 @@ def export_measurements(json_export_file, nxSession=None):
             for expr in feature.GetExpressions():
                 # typical type string: "p7( Face Measure : area )"
                 # the regex below extracts "area"
-                expr_name = re.search(r"(?<=\d\) )\w+(?=\))",\
-                    expr.Description)
+                expr_name = re.search(r"(?<=\d\) )\w+(?=\))", expr.Description)
                 if expr_name is None:
                     if expr.Type == "Point":
-                        # TODO: If only a single point in expression, 
+                        # TODO: If only a single point in expression,
                         # name it "point" instead of "point_1"
                         point_count += 1
                         expr_name = f"point_{point_count}"
@@ -146,13 +143,13 @@ def export_measurements(json_export_file, nxSession=None):
                     expr_value = {
                         "x": expr.PointValue.X,
                         "y": expr.PointValue.Y,
-                        "z": expr.PointValue.Z
+                        "z": expr.PointValue.Z,
                     }
                 elif expr.Type == "Vector":
                     expr_value = {
                         "x": expr.VectorValue.X,
                         "y": expr.VectorValue.Y,
-                        "z": expr.VectorValue.Z
+                        "z": expr.VectorValue.Z,
                     }
                 elif expr.Type == "List":
                     expr_value = expr.GetListValue()
@@ -160,7 +157,7 @@ def export_measurements(json_export_file, nxSession=None):
                     expr_value = expr.StringValue
                 else:
                     continue
-                    
+
                 current_expr["value"] = expr_value
 
                 current_feature["expressions"].append(current_expr)
@@ -178,7 +175,7 @@ def get_json_file_path():
     """Opens dialog box for user to choose where to save the measurements.
     Uses default directory in case of failure.
 
-    Requires very hacky work-around of installing 
+    Requires very hacky work-around of installing
     tk and tcl in NX directories"""
     try:
         import tkinter as tk

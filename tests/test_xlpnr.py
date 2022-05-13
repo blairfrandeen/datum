@@ -1,13 +1,13 @@
 import datetime
-import unittest
 import logging
+import unittest
 from unittest.mock import patch
 
 import xlwings as xw
 
 import datum.xl_populate_named_ranges as xlpnr
 
-xlpnr.logger = logging.getLogger('testLogger')
+xlpnr.logger = logging.getLogger("testLogger")
 
 # TODO: Restructure so we don't need to call out tests
 # folder for test data files
@@ -30,7 +30,9 @@ class TestJSON(unittest.TestCase):
         broken_json = xlpnr.get_json_measurement_names("tests/xl/broken.json")
         self.assertIsNone(broken_json)
 
-        no_measurements = xlpnr.get_json_measurement_names("tests/xl/no_measurements.json")
+        no_measurements = xlpnr.get_json_measurement_names(
+            "tests/xl/no_measurements.json"
+        )
         self.assertIsNone(no_measurements)
 
 
@@ -91,7 +93,7 @@ class TestXL(unittest.TestCase):
             expected_value = test_ranges[named_range]
             read_value = xlpnr.read_named_range(self.workbook, named_range)
             self.assertEqual(read_value, expected_value)
-    
+
     def test_read_named_vector_range(self):
         horizontal_range = "AIR_NUT.point_1"
         vertical_range = "HOUSING.moments_of_inertia_centroidal"

@@ -6,7 +6,6 @@ import math
 import NXOpen
 import NXOpen.UF
 import NXOpen.UIStyler
-
 from nxmods import nxdir, nxprint
 
 # Component groups that NX makes by default
@@ -14,14 +13,15 @@ DEFAULT_COMPONENT_GROUPS = [
     "AllComponents",
     "LoadedChangedComponents",
     "UnloadedChangedComponents",
-    "CurrentComponents"
+    "CurrentComponents",
 ]
 
-def main(): 
-    theSession  = NXOpen.Session.GetSession()
+
+def main():
+    theSession = NXOpen.Session.GetSession()
     workPart = theSession.Parts.Work
     displayPart = theSession.Parts.Display
-    
+
     nxprint(workPart)
     # nxdir(workPart)
     # nxdir(workPart.MeasureManager)
@@ -47,7 +47,6 @@ def main():
     for b in c.Prototype.Bodies:
         nxprint(b.Name)
 
-    
     # nxprint(workPart.ComponentAssembly)
     # nxdir(workPart.ComponentAssembly)
     # nxdir(workPart.Assemblies)
@@ -56,5 +55,5 @@ def main():
     # nxdir(bodybuilder)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

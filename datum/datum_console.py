@@ -3,7 +3,6 @@ import sys
 from collections import namedtuple
 
 import xlwings as xw
-
 from xl_populate_named_ranges import logger, update_named_ranges
 
 

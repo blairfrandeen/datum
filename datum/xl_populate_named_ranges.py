@@ -112,13 +112,13 @@ def preview_named_range_update(range_update_buffer, workbook):
     """Print out list of values that will be overwritten."""
     column_widths = "{0:<42} {1:>12.3f} {2:>12.3f} {3:>15.2f}"
     print("")
-    print("{0:<42} {1:>12} {2:>12} {3:>15}".format
-        (
+    print(
+        "{0:<42} {1:>12} {2:>12} {3:>15}".format(
             "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
         )
     )
-    print("{0:<42} {1:>12} {2:>12} {3:>15}".format
-        ("-"*20,"-"*12,"-"*12,"-"*15)
+    print(
+        "{0:<42} {1:>12} {2:>12} {3:>15}".format("-" * 20, "-" * 12, "-" * 12, "-" * 15)
     )
 
     for range_name in range_update_buffer.keys():
@@ -134,11 +134,11 @@ def preview_named_range_update(range_update_buffer, workbook):
                 if not isinstance(json_item, (int, float)):
                     logger.warning("List and dictionary items must be numbers.")
                     continue
-                try: 
+                try:
                     excel_item = excel_value[index]
-                except TypeError: # if excel value not a list
+                except TypeError:  # if excel value not a list
                     excel_item = excel_value
-                except IndexError: # if excel range not popualted
+                except IndexError:  # if excel range not popualted
                     excel_item = 0.0
 
                 if excel_item != 0:
@@ -207,13 +207,13 @@ def get_json_measurement_names(json_file):
     for measurement in json_data["measurements"]:
         measurement_name = measurement["name"]
         # replace spaces with underscores - no spaces allowed in excel range names
-        measurement_name = measurement_name.replace(' ','_')
+        measurement_name = measurement_name.replace(" ", "_")
         for expr in measurement["expressions"]:
             expression_name = expr["name"]
             range_name = f"{measurement_name}.{expression_name}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
                 vector = []
-                for coordinate in ['x', 'y', 'z']:
+                for coordinate in ["x", "y", "z"]:
                     coordinate_name = f"{range_name}.{coordinate}"
                     json_named_measurements[coordinate_name] = expr["value"][coordinate]
                     vector.append(expr["value"][coordinate])
@@ -241,7 +241,7 @@ def get_workbook_range_names(workbook):
     for named_range in workbook.names:
         # Sometimes Excel puts in hidden names that start
         # with _xlfn. -- skip these
-        if named_range.name.startswith('_xlfn.'):
+        if named_range.name.startswith("_xlfn."):
             continue
         range_value = read_named_range(workbook, named_range.name)
         workbook_named_ranges[named_range.name] = range_value

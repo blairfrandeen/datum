@@ -9,6 +9,7 @@
 
 # Exclude dev environment
 /py37
+/venv
 
 # For now, leaving NX part files off of Github
 # Part files for NX test can be found here: https://grabcad.com/library/coaxial-gearbox-1
