@@ -25,10 +25,15 @@ logger = logging.getLogger(__name__)
 
 
 def xw_get_named_range(workbook, range_name):
-    """Find a named range in an open workbook
-    Returns the range object if found, returns None if not found"""
+    """Find a named range in an open workbook.
+
+    Keyword arguments:
+    workbook -- xlwings Book object
+    range_name -- string with range name
+
+    Returns the range object if found,
+    returns None if not found"""
     if range_name in workbook.names:
-        # print(f'Found {range_name}')
         if "!#REF!" in workbook.names[range_name].refers_to:
             logger.error(
                 f"Name {range_name} has a #REF! error. Please fix prior to continuing."
@@ -43,8 +48,11 @@ def xw_get_named_range(workbook, range_name):
 
 
 def read_named_range(workbook, range_name):
-    """Read a value from a named range in the work book
-    Note: This function will return 0 if an empty cell is read"""
+    """Read a value from a named range in the workbook.
+
+    Keyword arguments:
+    workbook -- xlwings Book object
+    range_name -- string with range name"""
     # TODO: Make this work with ranges of more than one cell
     rng = xw_get_named_range(workbook, range_name)
     if rng is None:
@@ -54,6 +62,13 @@ def read_named_range(workbook, range_name):
 
 
 def write_named_range(workbook, range_name, new_value):
+    """Write a value or list to a named range.
+    
+    Keyword arguments:
+    workbook -- xlwings Book object
+    range_name -- string with range name
+    new_value -- new value or list of values to write
+    """
     rng = xw_get_named_range(workbook, range_name)
     if rng is None:
         return None
