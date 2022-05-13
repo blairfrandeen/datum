@@ -112,12 +112,6 @@ class TestXL(unittest.TestCase):
         self.assertEqual(vertical_result[1], 0.11)
         self.assertEqual(horizontal_result[2], 9.99)
 
-    def test_get_workbook(self):
-        non_existant_workbook = xlpnr.xw_get_workbook("DNE.xlsx")
-        self.assertIsNone(non_existant_workbook)
-        valid_workbook = xlpnr.xw_get_workbook("datum_excel_tests.xlsx")
-        self.assertIsInstance(valid_workbook, xw.Book)
-
     def test_update(self):
         xlpnr.write_named_range(self.workbook, "DIPSTICK.angle", 95)  # should be: 90
         xlpnr.write_named_range(self.workbook, "GEARS.mass", 45)  # should be: 55.456

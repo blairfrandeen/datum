@@ -24,16 +24,6 @@ logging.config.fileConfig("logging.conf")
 logger = logging.getLogger(__name__)
 
 
-def xw_get_workbook(target_workbook):
-    """Searches the workbooks that Excel has open
-    Returns a workbook object if found, throws an error otherwise"""
-    for book in xw.books:
-        if book.name == target_workbook:
-            return book
-    logger.error(f"Target workbook {target_workbook} is not open.")
-    return None
-
-
 def xw_get_named_range(workbook, range_name):
     """Find a named range in an open workbook
     Returns the range object if found, returns None if not found"""
