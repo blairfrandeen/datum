@@ -5,10 +5,10 @@ Tools to pull engineering data from dispirate sources and understand performance
 Currently this code includes two modules that allow the user to transfer limited data from measurement features in NX into named ranges in Excel.
 
 ### Requirements
-- Python 3.7 or above
+- Python 3.8.3 or above
 - NX running on Windows. This code works in NX 1953, may work in earlier verisons in which NXOpen supports Python
 - Microsoft Excel
-- Python `xlwings` module
+- See `requirements.txt` for full list of modules.
 
 ### Pulling measurement data from NX with `nx_get_measurements.py`
 Open a work part or assembly that has saved measurement features. Use the `Measure` tool and ensure that `associative` is checked under settings - the measurement should show up in the feature navigator. Give your measurement a meaningful name such as `MASS`, `SURFACE_AREA` or `DIAMETER`.
