@@ -1,2 +1,2 @@
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 print(f"Invoking __init__.py for {__name__}")
