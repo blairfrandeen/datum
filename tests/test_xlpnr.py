@@ -77,6 +77,9 @@ class TestXL(unittest.TestCase):
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
         self.assertEqual(testvalue, result)
 
+        self.assertIsNone(xlpnr.write_named_range(self.workbook,
+            "NON-EXISTANT-RANGE", testvalue))
+
     def test_write_empty_range(self):
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None)
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
