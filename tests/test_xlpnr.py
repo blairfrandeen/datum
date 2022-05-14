@@ -45,6 +45,7 @@ class TestXL(unittest.TestCase):
         self.json_file = TEST_JSON_FILE
 
     def _load_excel_test(self):
+        """Open an invisible Excel workbook to execute tests."""
         # visible=False tag will run tests in background
         # without opening Excel window
         self.app = xw.App(visible=False)
@@ -125,8 +126,8 @@ class TestXL(unittest.TestCase):
         self.assertAlmostEqual(updated_value, 54.456, places=2)
 
     def tearDown(self):
+        """Close all open workbooks, and quit Excel."""
         for book in self.app.books:
-            book.save()
             book.close()
         self.app.quit()
 

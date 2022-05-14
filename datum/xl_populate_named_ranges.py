@@ -7,11 +7,8 @@ and ready to populate, which takes some time to setup
 the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
-
-This only works with named ranges that are a single cell.
-Behavior with multiple-cell ranges has not been tested.
-
 """
+from typing import Optional, List, Union
 import json
 import logging
 import logging.config
@@ -21,10 +18,11 @@ import xlwings as xw
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
-logger = logging.getLogger(__name__)
+logger: logging.RootLogger = logging.getLogger(__name__)
 
 
-def xw_get_named_range(workbook, range_name):
+def xw_get_named_range(workbook: xw.main.Book,
+        range_name: str) -> Optional[xw.main.Range]:
     """Find a named range in an open workbook.
 
     Keyword arguments:
@@ -40,14 +38,15 @@ def xw_get_named_range(workbook, range_name):
             )
             logger.error("Use the name manager to remove or fix any names with errors.")
             return None
-        rng = workbook.names[range_name].refers_to_range
+        rng: xw.main.Range = workbook.names[range_name].refers_to_range
         return rng
     else:
         logger.debug(f"Name {range_name} not found in {workbook}")
         return None
 
 
-def read_named_range(workbook, range_name):
+def read_named_range(workbook: xw.main.Book,
+        range_name: str) -> Optional[Union[str, int, float, list]]:
     """Read a value from a named range in the workbook.
 
     Keyword arguments:
@@ -92,6 +91,8 @@ def backup_workbook(workbook):
     # TODO: Implement optional backup_dir argument to specify backup directory
     # TODO: Make more robust naming convention
     # TODO: Troubleshoot backup w/ M365 files
+    # TODO: Consider using separate app instance for backups in background
+    # TODO: Implement unit tests
     if not workbook.name.endswith(".xlsx"):
         logger.warning(f'Warning: workbook "{workbook.name}" not a .xlsx file')
 
@@ -171,17 +172,19 @@ def preview_named_range_update(range_update_buffer, workbook):
             )
 
 
-def write_named_ranges(workbook, range_update_buffer, source_str, backup=False):
+def write_named_ranges(workbook: xw.main.Book, range_update_buffer: dict,
+        source_str: str, backup: bool=False) -> None:
+    """Update named ranges in a workbook from a dictionary."""
 
     preview_named_range_update(range_update_buffer, workbook)
 
     print("The values listed above will be overwritten.")
     # TODO: Add argument to function to skip confirmation
     print("Enter 'y' to continue: ", end="")
-    overwrite_confirm = input()
+    overwrite_confirm: str = input()
     if overwrite_confirm == "y":
         if backup:
-            workbook = backup_workbook(workbook)
+            workbook: xw.main.Book = backup_workbook(workbook)
         logger.debug(
             f"Updating named ranges.\n\
             Source: {source_str}\n\
@@ -193,15 +196,15 @@ def write_named_ranges(workbook, range_update_buffer, source_str, backup=False):
         print("Aborted.")
 
 
-def get_json_measurement_names(json_file):
+def get_json_measurement_names(json_file: str) -> Optional[dict]:
     try:
         with open(json_file, "r") as json_file_handle:
-            json_data = json.load(json_file_handle)
+            json_data: dict = json.load(json_file_handle)
     except FileNotFoundError:
         logger.error(f"Unable to open {json_file}")
         return None
 
-    json_named_measurements = dict()
+    json_named_measurements: dict = dict()
     if "measurements" not in json_data.keys():
         logger.error(f"JSON file {json_file} has no measurement keys.")
         return None
@@ -210,16 +213,16 @@ def get_json_measurement_names(json_file):
         return None
 
     for measurement in json_data["measurements"]:
-        measurement_name = measurement["name"]
+        measurement_name: str = measurement["name"]
         # replace spaces with underscores - no spaces allowed in excel range names
-        measurement_name = measurement_name.replace(" ", "_")
+        measurement_name: str = measurement_name.replace(" ", "_")
         for expr in measurement["expressions"]:
-            expression_name = expr["name"]
-            range_name = f"{measurement_name}.{expression_name}"
+            expression_name: str = expr["name"]
+            range_name: str = f"{measurement_name}.{expression_name}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
-                vector = []
+                vector: List[float]= []
                 for coordinate in ["x", "y", "z"]:
-                    coordinate_name = f"{range_name}.{coordinate}"
+                    coordinate_name: str = f"{range_name}.{coordinate}"
                     json_named_measurements[coordinate_name] = expr["value"][coordinate]
                     vector.append(expr["value"][coordinate])
                 # TODO: Keep dicts as dicts, don't conver them to vectors.
@@ -229,7 +232,7 @@ def get_json_measurement_names(json_file):
             elif expr["type"] == "List":
                 json_named_measurements[range_name] = expr["value"]
                 for index in range(3):
-                    range_name = f"{range_name}.{index}"
+                    range_name: str = f"{range_name}.{index}"
                     json_named_measurements[range_name] = expr["value"][index]
             else:
                 json_named_measurements[range_name] = expr["value"]
@@ -237,7 +240,7 @@ def get_json_measurement_names(json_file):
     return json_named_measurements
 
 
-def get_workbook_range_names(workbook):
+def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
     # make a dict of named ranges, measurement names, and measurement types
     workbook_named_ranges = dict()
     if len(workbook.names) == 0:
@@ -254,7 +257,8 @@ def get_workbook_range_names(workbook):
     return workbook_named_ranges
 
 
-def update_named_ranges(source, target, backup=False):
+def update_named_ranges(source: Union[str, dict], target: xw.main.Book,
+        backup: bool=False) -> Optional[dict]:
     """
     Open a JSON file and an excel file. Update the named
     ranges in the excel file with the corresponding JSON values.
@@ -266,25 +270,25 @@ def update_named_ranges(source, target, backup=False):
     """
     # Assume target is open excel worksheet
     # TODO: Implement ability to take .xlsx file path as argument
-    target_data = get_workbook_range_names(target)
+    target_data: dict = get_workbook_range_names(target)
     if not target_data:
         print("No named ranges in Excel file.")
         return None
 
     # Check if source is json file
     if isinstance(source, str) and source.lower().endswith(".json"):
-        source_data = get_json_measurement_names(source)
+        source_data: dict = get_json_measurement_names(source)
         if not source_data:
             print("No measurement data found in JSON file.")
             return None
-        source_str = source
+        source_str: str = source
 
     elif isinstance(source, dict):
-        source_data = source
-        source_str = "UNDO BUFFER"
+        source_data: dict = source
+        source_str: str = "UNDO BUFFER"
 
     # find range names that occur both in Excel and JSON
-    ranges_to_update = list(source_data.keys() & target_data.keys())
+    ranges_to_update: list = list(source_data.keys() & target_data.keys())
 
     range_update_buffer = dict()
     range_undo_buffer = dict()
