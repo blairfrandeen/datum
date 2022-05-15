@@ -71,6 +71,16 @@ class TestXL(unittest.TestCase):
         self.assertIsNone(empty_wb)
         blank_wb.close()
 
+    def test_list_len(self):
+        empty_list = []
+        list_1d = [ 1.3, 2, 'three', 4.2, 5 ]
+        list_2d = [ list_1d, list_1d ]
+        list_mixed = list_1d + [ list_1d ]
+        self.assertEqual(xlpnr.list_len(empty_list), 0)
+        self.assertEqual(xlpnr.list_len(list_1d), 5)
+        self.assertEqual(xlpnr.list_len(list_2d), 10)
+        self.assertEqual(xlpnr.list_len(list_mixed), 10)
+
     def test_write_named_range(self):
         testvalue = 700_000
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue)

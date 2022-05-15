@@ -60,6 +60,17 @@ def read_named_range(workbook: xw.main.Book,
     return rng.value
 
 
+def list_len(input_list: list) -> int:
+    """Determine the number of elements in a 1D or 2D list"""
+    num_elements: int = 0
+    for element in input_list:
+        if isinstance(element, list):
+            num_elements += len(element)
+        else:
+            num_elements += 1
+
+    return num_elements
+
 def write_named_range(workbook: xw.main.Book, range_name: str,
     new_value: Optional[Union[list, float, int, str]]) -> Optional[Union[list,
     int, str, float]]:
@@ -76,14 +87,7 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
 
     if isinstance(new_value, list):
         # Count number of elements in list, including 2D arrays
-        # TODO: Make below code separate function w/ unit tests
-        new_value_len: int = 0
-        for element in new_value:
-            if isinstance(element, list):
-                new_value_len += len(element)
-            else:
-                new_value_len += 1
-                # sum(len(element) for element in new_value if isinstance(element, list))
+        new_value_len: int = list_len(new_value)
         # TODO: Unit test for this case
         if new_value_len > target_range.size:
             # Truncate input if range size is too small
