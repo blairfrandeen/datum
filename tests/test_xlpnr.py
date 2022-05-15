@@ -73,12 +73,12 @@ class TestXL(unittest.TestCase):
         blank_wb.close()
 
     def test_flattened_list(self):
-        list_1d = [ 1.3, 2, 'three', 4.2, 5 ]
-        list_2d = [ list_1d, list_1d ]
-        list_mixed = list_1d + [ list_1d ]
-        assert(list(xlpnr.flatten_list(list_1d)) == list_1d)
-        assert(list(xlpnr.flatten_list(list_2d)) == list_1d + list_1d)
-        assert(list(xlpnr.flatten_list(list_mixed)) == list_1d + list_1d)
+        list_1d = [1.3, 2, "three", 4.2, 5]
+        list_2d = [list_1d, list_1d]
+        list_mixed = list_1d + [list_1d]
+        assert list(xlpnr.flatten_list(list_1d)) == list_1d
+        assert list(xlpnr.flatten_list(list_2d)) == list_1d + list_1d
+        assert list(xlpnr.flatten_list(list_mixed)) == list_1d + list_1d
 
     def test_write_named_range(self):
         testvalue = 700_000
@@ -86,16 +86,21 @@ class TestXL(unittest.TestCase):
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
         self.assertEqual(testvalue, result)
 
-        self.assertIsNone(xlpnr.write_named_range(self.workbook,
-            "NON-EXISTANT-RANGE", testvalue))
+        self.assertIsNone(
+            xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", testvalue)
+        )
 
-        illegal_dict = {'kivo': 'stinker', 'layla': 'earflops'}
-        self.assertIsNone(xlpnr.write_named_range(self.workbook,
-            "SURFACE_PAINTED.area", illegal_dict))
+        illegal_dict = {"kivo": "stinker", "layla": "earflops"}
+        self.assertIsNone(
+            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", illegal_dict)
+        )
 
         illegal_tuple = (1, 2, 3)
-        self.assertIsNone(xlpnr.write_named_range(self.workbook,
-            "SURFACE_PAINTED.area", illegal_tuple))
+        self.assertIsNone(
+            xlpnr.write_named_range(
+                self.workbook, "SURFACE_PAINTED.area", illegal_tuple
+            )
+        )
 
     def test_write_empty_range(self):
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None)
@@ -126,25 +131,29 @@ class TestXL(unittest.TestCase):
     def test_write_named_vector_range(self):
         horizontal_range = "AIR_NUT.point_1"
         vertical_range = "HOUSING.moments_of_inertia_centroidal"
-        horizontal_result = xlpnr.write_named_range(self.workbook,
-            horizontal_range, [3.0, 2.11, 9.99])
-        vertical_result = xlpnr.write_named_range(self.workbook,
-            vertical_range, [0.012, 0.11, 0.99])
+        horizontal_result = xlpnr.write_named_range(
+            self.workbook, horizontal_range, [3.0, 2.11, 9.99]
+        )
+        vertical_result = xlpnr.write_named_range(
+            self.workbook, vertical_range, [0.012, 0.11, 0.99]
+        )
         self.assertEqual(vertical_result[1], 0.11)
         self.assertEqual(horizontal_result[2], 9.99)
 
     def test_wrong_size_range(self):
         small_range = "too_small_range"
         large_range = "Range_that_s_too_large"
-        wrong_size_list = [[1, 2, 3, 4, 5],[6, 7, 8, 9, 10]]
-        self.assertEqual(xlpnr.write_named_range(self.workbook,
-            small_range, wrong_size_list), [1,2])
+        wrong_size_list = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]
+        self.assertEqual(
+            xlpnr.write_named_range(self.workbook, small_range, wrong_size_list), [1, 2]
+        )
 
-        self.assertEqual(xlpnr.write_named_range(self.workbook,
-            large_range, wrong_size_list), list(xlpnr.flatten_list(wrong_size_list)))
+        self.assertEqual(
+            xlpnr.write_named_range(self.workbook, large_range, wrong_size_list),
+            list(xlpnr.flatten_list(wrong_size_list)),
+        )
         self.assertIsNone(self.workbook.names[large_range].refers_to_range.value[2][0])
-        self.assertIsNone(xlpnr.read_named_range(self.workbook,
-            large_range)[2][0])
+        self.assertIsNone(xlpnr.read_named_range(self.workbook, large_range)[2][0])
 
     def test_update(self):
         xlpnr.write_named_range(self.workbook, "DIPSTICK.angle", 95)  # should be: 90
@@ -159,10 +168,12 @@ class TestXL(unittest.TestCase):
         self.assertAlmostEqual(updated_value, 54.456, places=2)
 
         blank_wb = self.app.books.add()
-        assert(xlpnr.update_named_ranges(self.json_file, blank_wb) is None)
+        assert xlpnr.update_named_ranges(self.json_file, blank_wb) is None
         blank_wb.close()
 
-        assert(xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None)
+        assert (
+            xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None
+        )
         # no_measurements = xlpnr.get_json_measurement_names(
         #     "tests/xl/no_measurements.json"
         # )
@@ -170,7 +181,7 @@ class TestXL(unittest.TestCase):
 
     def test_backup(self):
         backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
-        assert(os.path.isfile(backup_wb))
+        assert os.path.isfile(backup_wb)
 
     def tearDown(self):
         """Close all open workbooks, and quit Excel."""

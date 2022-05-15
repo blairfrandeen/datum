@@ -8,12 +8,11 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
-from pathlib import Path
-from typing import Optional, List, Union
 import json
 import logging
 import logging.config
-import os
+from pathlib import Path
+from typing import List, Optional, Union
 
 import xlwings as xw
 
@@ -22,8 +21,9 @@ logging.config.fileConfig("logging.conf")
 logger: logging.RootLogger = logging.getLogger(__name__)
 
 
-def xw_get_named_range(workbook: xw.main.Book,
-        range_name: str) -> Optional[xw.main.Range]:
+def xw_get_named_range(
+    workbook: xw.main.Book, range_name: str
+) -> Optional[xw.main.Range]:
     """Find a named range in an open workbook.
 
     Keyword arguments:
@@ -46,8 +46,9 @@ def xw_get_named_range(workbook: xw.main.Book,
         return None
 
 
-def read_named_range(workbook: xw.main.Book,
-        range_name: str) -> Optional[Union[str, int, float, list]]:
+def read_named_range(
+    workbook: xw.main.Book, range_name: str
+) -> Optional[Union[str, int, float, list]]:
     """Read a value from a named range in the workbook.
 
     Keyword arguments:
@@ -71,11 +72,13 @@ def flatten_list(target_list: list) -> list:
             yield element
 
 
-def write_named_range(workbook: xw.main.Book, range_name: str,
-    new_value: Optional[Union[list, float, int, str]]) -> Optional[Union[list,
-    int, str, float]]:
+def write_named_range(
+    workbook: xw.main.Book,
+    range_name: str,
+    new_value: Optional[Union[list, float, int, str]],
+) -> Optional[Union[list, int, str, float]]:
     """Write a value or list to a named range.
-    
+
     Keyword arguments:
     workbook -- xlwings Book object
     range_name -- string with range name
@@ -93,13 +96,15 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
         # TODO: Unit test for this case
         if new_value_len > target_range.size:
             # Truncate input if range size is too small
-            new_value = new_value[:target_range.size]
+            new_value = new_value[: target_range.size]
             logger.warning(f"range {target_range.name} has size {target_range.size}.")
             logger.warning(f"Vector of length {new_value_len} will be truncated.")
         elif new_value_len < target_range.size:
             # If range is too big, warn that not all cells will be populated
-            logger.warning(f"Range {range_name} of size\
-                {target_range.size} is larger than required.")
+            logger.warning(
+                f"Range {range_name} of size\
+                {target_range.size} is larger than required."
+            )
         for index in range(min(target_range.size, new_value_len)):
             target_range[index].value = new_value[index]
         return new_value
@@ -107,12 +112,13 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
         target_range.value = new_value
         return new_value
     else:
-        logger.error(f"Cannot write value of type {type(new_value)} to range {range_name}")
+        logger.error(
+            f"Cannot write value of type {type(new_value)} to range {range_name}"
+        )
         return None
 
 
-def backup_workbook(workbook: xw.main.Book,
-    backup_dir: str='.') -> Path:
+def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     """Create a backup copy of the workbook.
     Returns the path of the backup copy."""
     # TODO: Make more robust naming convention
@@ -122,17 +128,17 @@ def backup_workbook(workbook: xw.main.Book,
     wb_name: str = workbook.name.split(".xlsx")[0]
 
     backup_path = Path(f"{backup_dir}\\{wb_name}_BACKUP.xlsx")
-    
+
     # Open a new blank workbook
     backup_wb: xw.main.Book = xw.Book()
-    
+
     # Copy sheets individually
     for sheet in workbook.sheets:
         sheet.copy(after=backup_wb.sheets[0])
 
     # Delete the first blank sheet
     backup_wb.sheets[0].delete()
-    
+
     # Save & close
     backup_wb.save(path=backup_path)
     backup_wb.close()
@@ -198,8 +204,12 @@ def preview_named_range_update(range_update_buffer, workbook):
             )
 
 
-def write_named_ranges(workbook: xw.main.Book, range_update_buffer: dict,
-        source_str: str, backup: bool=False) -> None:
+def write_named_ranges(
+    workbook: xw.main.Book,
+    range_update_buffer: dict,
+    source_str: str,
+    backup: bool = False,
+) -> None:
     """Update named ranges in a workbook from a dictionary."""
 
     preview_named_range_update(range_update_buffer, workbook)
@@ -247,7 +257,7 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
             expression_name: str = expr["name"]
             range_name: str = f"{measurement_name}.{expression_name}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
-                vector: List[float]= []
+                vector: List[float] = []
                 for coordinate in ["x", "y", "z"]:
                     coordinate_name: str = f"{range_name}.{coordinate}"
                     json_named_measurements[coordinate_name] = expr["value"][coordinate]
@@ -284,8 +294,9 @@ def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
     return workbook_named_ranges
 
 
-def update_named_ranges(source: Union[str, dict], target: xw.main.Book,
-        backup: bool=False) -> Optional[dict]:
+def update_named_ranges(
+    source: Union[str, dict], target: xw.main.Book, backup: bool = False
+) -> Optional[dict]:
     """
     Open a JSON file and an excel file. Update the named
     ranges in the excel file with the corresponding JSON values.
