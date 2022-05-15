@@ -157,6 +157,16 @@ class TestXL(unittest.TestCase):
         updated_value = xlpnr.read_named_range(self.workbook, "GEARS.mass")
         self.assertAlmostEqual(updated_value, 54.456, places=2)
 
+        blank_wb = self.app.books.add()
+        assert(xlpnr.update_named_ranges(self.json_file, blank_wb) is None)
+        blank_wb.close()
+
+        assert(xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None)
+        # no_measurements = xlpnr.get_json_measurement_names(
+        #     "tests/xl/no_measurements.json"
+        # )
+        # assert(xlpnr.update_named_ranges(no_measurements, self.workbook) is None)
+
     def tearDown(self):
         """Close all open workbooks, and quit Excel."""
         for book in self.app.books:

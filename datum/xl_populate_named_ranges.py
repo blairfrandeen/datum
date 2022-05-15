@@ -304,11 +304,13 @@ def update_named_ranges(source: Union[str, dict], target: xw.main.Book,
     # Check if source is json file
     if isinstance(source, str) and source.lower().endswith(".json"):
         source_data: dict = get_json_measurement_names(source)
+        # TODO: Unit Test
         if not source_data:
             print("No measurement data found in JSON file.")
             return None
         source_str: str = source
 
+    # TODO: Unit test
     elif isinstance(source, dict):
         source_data: dict = source
         source_str: str = "UNDO BUFFER"
