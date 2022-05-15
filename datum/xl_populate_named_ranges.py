@@ -8,6 +8,7 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
+from email.generator import Generator
 import json
 import logging
 import logging.config
@@ -18,7 +19,7 @@ import xlwings as xw
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
-logger: logging.RootLogger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def xw_get_named_range(
@@ -62,7 +63,7 @@ def read_named_range(
     return rng.value
 
 
-def flatten_list(target_list: list) -> list:
+def flatten_list(target_list: list):
     """Flatten any nested list."""
     for element in target_list:
         if isinstance(element, list):
@@ -252,7 +253,7 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
     for measurement in json_data["measurements"]:
         measurement_name: str = measurement["name"]
         # replace spaces with underscores - no spaces allowed in excel range names
-        measurement_name: str = measurement_name.replace(" ", "_")
+        measurement_name = measurement_name.replace(" ", "_")
         for expr in measurement["expressions"]:
             expression_name: str = expr["name"]
             range_name: str = f"{measurement_name}.{expression_name}"
@@ -269,7 +270,7 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
             elif expr["type"] == "List":
                 json_named_measurements[range_name] = expr["value"]
                 for index in range(3):
-                    range_name: str = f"{range_name}.{index}"
+                    range_name = f"{range_name}.{index}"
                     json_named_measurements[range_name] = expr["value"][index]
             else:
                 json_named_measurements[range_name] = expr["value"]
@@ -308,14 +309,14 @@ def update_named_ranges(
     """
     # Assume target is open excel worksheet
     # TODO: Implement ability to take .xlsx file path as argument
-    target_data: dict = get_workbook_range_names(target)
+    target_data: Optional[dict] = get_workbook_range_names(target)
     if not target_data:
         print("No named ranges in Excel file.")
         return None
 
     # Check if source is json file
     if isinstance(source, str) and source.lower().endswith(".json"):
-        source_data: dict = get_json_measurement_names(source)
+        source_data: Optional[dict] = get_json_measurement_names(source)
         # TODO: Unit Test
         if not source_data:
             print("No measurement data found in JSON file.")
@@ -324,8 +325,8 @@ def update_named_ranges(
 
     # TODO: Unit test
     elif isinstance(source, dict):
-        source_data: dict = source
-        source_str: str = "UNDO BUFFER"
+        source_data = source
+        source_str = "UNDO BUFFER"
 
     # find range names that occur both in Excel and JSON
     ranges_to_update: list = list(source_data.keys() & target_data.keys())
