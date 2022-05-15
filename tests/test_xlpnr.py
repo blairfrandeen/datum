@@ -71,15 +71,13 @@ class TestXL(unittest.TestCase):
         self.assertIsNone(empty_wb)
         blank_wb.close()
 
-    def test_list_len(self):
-        empty_list = []
+    def test_flattened_list(self):
         list_1d = [ 1.3, 2, 'three', 4.2, 5 ]
         list_2d = [ list_1d, list_1d ]
         list_mixed = list_1d + [ list_1d ]
-        self.assertEqual(xlpnr.list_len(empty_list), 0)
-        self.assertEqual(xlpnr.list_len(list_1d), 5)
-        self.assertEqual(xlpnr.list_len(list_2d), 10)
-        self.assertEqual(xlpnr.list_len(list_mixed), 10)
+        assert(list(xlpnr.flatten_list(list_1d)) == list_1d)
+        assert(list(xlpnr.flatten_list(list_2d)) == list_1d + list_1d)
+        assert(list(xlpnr.flatten_list(list_mixed)) == list_1d + list_1d)
 
     def test_write_named_range(self):
         testvalue = 700_000
@@ -133,6 +131,19 @@ class TestXL(unittest.TestCase):
             vertical_range, [0.012, 0.11, 0.99])
         self.assertEqual(vertical_result[1], 0.11)
         self.assertEqual(horizontal_result[2], 9.99)
+
+    def test_wrong_size_range(self):
+        small_range = "too_small_range"
+        large_range = "Range_that_s_too_large"
+        wrong_size_list = [[1, 2, 3, 4, 5],[6, 7, 8, 9, 10]]
+        self.assertEqual(xlpnr.write_named_range(self.workbook,
+            small_range, wrong_size_list), [1,2])
+
+        self.assertEqual(xlpnr.write_named_range(self.workbook,
+            large_range, wrong_size_list), list(xlpnr.flatten_list(wrong_size_list)))
+        self.assertIsNone(self.workbook.names[large_range].refers_to_range.value[2][0])
+        self.assertIsNone(xlpnr.read_named_range(self.workbook,
+            large_range)[2][0])
 
     def test_update(self):
         xlpnr.write_named_range(self.workbook, "DIPSTICK.angle", 95)  # should be: 90
