@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import unittest
 from unittest.mock import patch
 
@@ -166,6 +167,10 @@ class TestXL(unittest.TestCase):
         #     "tests/xl/no_measurements.json"
         # )
         # assert(xlpnr.update_named_ranges(no_measurements, self.workbook) is None)
+
+    def test_backup(self):
+        backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
+        assert(os.path.isfile(backup_wb))
 
     def tearDown(self):
         """Close all open workbooks, and quit Excel."""

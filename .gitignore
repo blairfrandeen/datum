@@ -6,6 +6,7 @@
 # Only allow excel from tests folder
 *.xlsx
 !tests/xl/*.xlsx
+tests/xl/*_BACKUP.xlsx
 
 # Exclude dev environment
 /py37

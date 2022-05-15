@@ -111,33 +111,36 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
         return None
 
 
-def backup_workbook(workbook):
-    """Create a backup copy of the workbook. Returns
-    a new workbook object for the current workbook."""
-    # TODO: Implement optional backup_dir argument to specify backup directory
+def backup_workbook(workbook: xw.main.Book,
+    backup_dir: Optional[str] = None) -> str:
+    """Create a backup copy of the workbook.
+    Returns the path of the backup copy."""
     # TODO: Make more robust naming convention
-    # TODO: Troubleshoot backup w/ M365 files
-    # TODO: Consider using separate app instance for backups in background
+    # TODO: Verify M365 files are backing up correctly
     # TODO: Implement unit tests
-    if not workbook.name.endswith(".xlsx"):
-        logger.warning(f'Warning: workbook "{workbook.name}" not a .xlsx file')
-
-    wb_name = workbook.name.split(".")[-2]
-    wb_full_path = workbook.fullname
-    backup_path = f"{os.getcwd()}\\{wb_name}_BACKUP.xlsx"
-    try:
-        new_workbook = xw.books.open(fullname=wb_full_path)
-    except FileNotFoundError:
-        logger.exception(
-            f"Cannot open workbook at {wb_full_path}.\
-            Workbook will NOT be backed up prior to write!"
-        )
+    print(f"Backuping up {workbook.name}...")
+    wb_name: str = workbook.name.split(".xlsx")[0]
+    # wb_full_path = workbook.fullname
+    if backup_dir:
+        backup_path = f"{os.getcwd()}\\{backup_dir}\\{wb_name}_BACKUP.xlsx"
     else:
-        workbook.save(path=backup_path)
-        new_workbook = xw.books.open(fullname=wb_full_path)
-        workbook.close()
-    logger.info(f"Successfully backed up to {backup_path}")
-    return new_workbook
+        backup_path = f"{os.getcwd()}\\{wb_name}_BACKUP.xlsx"
+    
+    # Open a new blank workbook
+    backup_wb: xw.main.Book = xw.Book()
+    
+    # Copy sheets individually
+    for sheet in workbook.sheets:
+        sheet.copy(after=backup_wb.sheets[0])
+
+    # Delete the first blank sheet
+    backup_wb.sheets[0].delete()
+    
+    # Save & close
+    backup_wb.save(path=backup_path)
+    backup_wb.close()
+
+    return backup_path
 
 
 def preview_named_range_update(range_update_buffer, workbook):
