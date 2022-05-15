@@ -8,6 +8,7 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
+from itertools import chain
 from typing import Optional, List, Union
 import json
 import logging
@@ -60,16 +61,15 @@ def read_named_range(workbook: xw.main.Book,
     return rng.value
 
 
-def list_len(input_list: list) -> int:
-    """Determine the number of elements in a 1D or 2D list"""
-    num_elements: int = 0
-    for element in input_list:
+def flatten_list(target_list: list) -> list:
+    """Flatten any nested list."""
+    for element in target_list:
         if isinstance(element, list):
-            num_elements += len(element)
+            for sub_element in flatten_list(element):
+                yield sub_element
         else:
-            num_elements += 1
+            yield element
 
-    return num_elements
 
 def write_named_range(workbook: xw.main.Book, range_name: str,
     new_value: Optional[Union[list, float, int, str]]) -> Optional[Union[list,
@@ -86,19 +86,21 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
         return None
 
     if isinstance(new_value, list):
-        # Count number of elements in list, including 2D arrays
-        new_value_len: int = list_len(new_value)
+        # Flatten any arbitrary list
+        new_value = list(flatten_list(new_value))
+        new_value_len: int = len(new_value)
+        # new_value_len: int = list_len(new_value)
         # TODO: Unit test for this case
         if new_value_len > target_range.size:
             # Truncate input if range size is too small
-            new_value = new_value[:new_value_len]
+            new_value = new_value[:target_range.size]
             logger.warning(f"range {target_range.name} has size {target_range.size}.")
             logger.warning(f"Vector of length {new_value_len} will be truncated.")
         elif new_value_len < target_range.size:
             # If range is too big, warn that not all cells will be populated
             logger.warning(f"Range {range_name} of size\
                 {target_range.size} is larger than required.")
-        for index in range(target_range.size):
+        for index in range(min(target_range.size, new_value_len)):
             target_range[index].value = new_value[index]
         return new_value
     elif isinstance(new_value, (int, str, float)) or new_value is None:
