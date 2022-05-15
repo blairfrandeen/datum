@@ -8,7 +8,7 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
-from itertools import chain
+from pathlib import Path
 from typing import Optional, List, Union
 import json
 import logging
@@ -112,7 +112,7 @@ def write_named_range(workbook: xw.main.Book, range_name: str,
 
 
 def backup_workbook(workbook: xw.main.Book,
-    backup_dir: Optional[str] = None) -> str:
+    backup_dir: str='.') -> Path:
     """Create a backup copy of the workbook.
     Returns the path of the backup copy."""
     # TODO: Make more robust naming convention
@@ -120,11 +120,8 @@ def backup_workbook(workbook: xw.main.Book,
     # TODO: Implement unit tests
     print(f"Backuping up {workbook.name}...")
     wb_name: str = workbook.name.split(".xlsx")[0]
-    # wb_full_path = workbook.fullname
-    if backup_dir:
-        backup_path = f"{os.getcwd()}\\{backup_dir}\\{wb_name}_BACKUP.xlsx"
-    else:
-        backup_path = f"{os.getcwd()}\\{wb_name}_BACKUP.xlsx"
+
+    backup_path = Path(f"{backup_dir}\\{wb_name}_BACKUP.xlsx")
     
     # Open a new blank workbook
     backup_wb: xw.main.Book = xw.Book()
@@ -213,7 +210,8 @@ def write_named_ranges(workbook: xw.main.Book, range_update_buffer: dict,
     overwrite_confirm: str = input()
     if overwrite_confirm == "y":
         if backup:
-            workbook: xw.main.Book = backup_workbook(workbook)
+            backup_path: Path = backup_workbook(workbook)
+            logger.debug(f"Backed up to {backup_path}")
         logger.debug(
             f"Updating named ranges.\n\
             Source: {source_str}\n\
