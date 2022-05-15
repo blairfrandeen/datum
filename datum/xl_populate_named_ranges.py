@@ -60,7 +60,9 @@ def read_named_range(workbook: xw.main.Book,
     return rng.value
 
 
-def write_named_range(workbook, range_name, new_value):
+def write_named_range(workbook: xw.main.Book, range_name: str,
+    new_value: Optional[Union[list, float, int, str]]) -> Optional[Union[list,
+    int, str, float]]:
     """Write a value or list to a named range.
     
     Keyword arguments:
@@ -68,21 +70,39 @@ def write_named_range(workbook, range_name, new_value):
     range_name -- string with range name
     new_value -- new value or list of values to write
     """
-    rng = xw_get_named_range(workbook, range_name)
-    if rng is None:
+    target_range: xw.main.Range = xw_get_named_range(workbook, range_name)
+    if target_range is None:
         return None
 
     if isinstance(new_value, list):
-        vector_length = len(new_value)
-        # ensure list is correct size for range
+        # Count number of elements in list, including 2D arrays
+        # TODO: Make below code separate function w/ unit tests
+        new_value_len: int = 0
+        for element in new_value:
+            if isinstance(element, list):
+                new_value_len += len(element)
+            else:
+                new_value_len += 1
+                # sum(len(element) for element in new_value if isinstance(element, list))
         # TODO: Unit test for this case
-        if vector_length != rng.size:
-            logger.warning(f"range {rng.name} has size {rng.size}.")
-            logger.warning(f"Vector of length {vector_length} will be truncated.")
-        for index in range(rng.size):
-            rng[index].value = new_value[index]
+        if new_value_len > target_range.size:
+            # Truncate input if range size is too small
+            new_value = new_value[:new_value_len]
+            logger.warning(f"range {target_range.name} has size {target_range.size}.")
+            logger.warning(f"Vector of length {new_value_len} will be truncated.")
+        elif new_value_len < target_range.size:
+            # If range is too big, warn that not all cells will be populated
+            logger.warning(f"Range {range_name} of size\
+                {target_range.size} is larger than required.")
+        for index in range(target_range.size):
+            target_range[index].value = new_value[index]
+        return new_value
+    elif isinstance(new_value, (int, str, float)) or new_value is None:
+        target_range.value = new_value
+        return new_value
     else:
-        rng.value = new_value
+        logger.error(f"Cannot write value of type {type(new_value)} to range {range_name}")
+        return None
 
 
 def backup_workbook(workbook):

@@ -80,6 +80,14 @@ class TestXL(unittest.TestCase):
         self.assertIsNone(xlpnr.write_named_range(self.workbook,
             "NON-EXISTANT-RANGE", testvalue))
 
+        illegal_dict = {'kivo': 'stinker', 'layla': 'earflops'}
+        self.assertIsNone(xlpnr.write_named_range(self.workbook,
+            "SURFACE_PAINTED.area", illegal_dict))
+
+        illegal_tuple = (1, 2, 3)
+        self.assertIsNone(xlpnr.write_named_range(self.workbook,
+            "SURFACE_PAINTED.area", illegal_tuple))
+
     def test_write_empty_range(self):
         xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None)
         result = xlpnr.read_named_range(self.workbook, "SURFACE_PAINTED.area")
@@ -109,10 +117,10 @@ class TestXL(unittest.TestCase):
     def test_write_named_vector_range(self):
         horizontal_range = "AIR_NUT.point_1"
         vertical_range = "HOUSING.moments_of_inertia_centroidal"
-        xlpnr.write_named_range(self.workbook, horizontal_range, [3.0, 2.11, 9.99])
-        xlpnr.write_named_range(self.workbook, vertical_range, [0.012, 0.11, 0.99])
-        vertical_result = xlpnr.read_named_range(self.workbook, vertical_range)
-        horizontal_result = xlpnr.read_named_range(self.workbook, horizontal_range)
+        horizontal_result = xlpnr.write_named_range(self.workbook,
+            horizontal_range, [3.0, 2.11, 9.99])
+        vertical_result = xlpnr.write_named_range(self.workbook,
+            vertical_range, [0.012, 0.11, 0.99])
         self.assertEqual(vertical_result[1], 0.11)
         self.assertEqual(horizontal_result[2], 9.99)
 
