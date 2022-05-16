@@ -251,6 +251,8 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
         return None
 
     for measurement in json_data["measurements"]:
+        # TODO: Verify that each measurement has at least a name
+        # and an expression
         measurement_name: str = measurement["name"]
         # replace spaces with underscores - no spaces allowed in excel range names
         measurement_name = measurement_name.replace(" ", "_")
