@@ -3,10 +3,9 @@ import sys
 from collections import namedtuple
 
 import xlwings as xw
-from xl_populate_named_ranges import logger, update_named_ranges
+from datum.xl_populate_named_ranges import logger, update_named_ranges
 
 
-# TODO: Set up logging for tests
 class ConsoleSession:
     def __init__(self):
         self.json_file = None
