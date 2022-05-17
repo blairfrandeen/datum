@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import pytest
 import unittest
 from unittest.mock import patch
 
@@ -28,13 +29,30 @@ class TestJSON(unittest.TestCase):
         non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
         self.assertIsNone(non_existant_json)
 
-        broken_json = xlpnr.get_json_measurement_names("tests/xl/broken.json")
+        broken_json = xlpnr.get_json_measurement_names("tests/json/broken.json")
         self.assertIsNone(broken_json)
 
         no_measurements = xlpnr.get_json_measurement_names(
-            "tests/xl/no_measurements.json"
+            "tests/json/no_measurements.json"
         )
         self.assertIsNone(no_measurements)
+
+    def test_check_dict_keys(self):
+        test_dict = {
+            "test_key1": [
+                "item 1", "item 2"
+            ],
+            "test_key2": [],
+            "test_key4": [ 1, 2, 3 ],
+            "test_non_list": 5
+        }
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
+        assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key3"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key2"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
+        assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
 
 
 class TestXL(unittest.TestCase):
