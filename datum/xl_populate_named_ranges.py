@@ -57,7 +57,7 @@ def read_named_range(
     workbook -- xlwings Book object
     range_name -- string with range name"""
     # TODO: Make this work with ranges of more than one cell
-    rng = xw_get_named_range(workbook, range_name)
+    rng: Optional[xw.main.Range] = xw_get_named_range(workbook, range_name)
     if rng is None:
         return None
 
@@ -181,8 +181,14 @@ def preview_named_range_update(range_update_buffer, workbook):
                 except IndexError:  # if excel range not popualted
                     excel_item = 0.0
 
-                if excel_item != 0:
-                    percent_change = (json_item - excel_item) / excel_item * 100
+                # TODO: Better handling for empty cells
+                # quick fix is to populate cells with junk data
+                if excel_item != 0 and excel_value is not None:
+                    try:
+                        percent_change = (json_item - excel_item) / excel_item * 100
+                    except TypeError as e:
+                        logger.error(e)
+                        logger.error(f"{range_name = }, {json_value = }, {excel_value = }")
                 else:
                     percent_change = 100.0
                 print(
@@ -193,9 +199,17 @@ def preview_named_range_update(range_update_buffer, workbook):
         elif isinstance(json_value, str):
             print(f"String handling for {range_name} not implemented.")
         else:
-            excel_value = float(excel_value)
-            if excel_value != 0:
-                percent_change = (json_value - excel_value) / excel_value * 100
+            # TODO: Better handling for empty cells
+            try:
+                excel_value = float(excel_value)
+            except TypeError:
+                excel_value = 0
+            if excel_value != 0 and excel_value is not None:
+                try:
+                    percent_change = (json_value - excel_value) / excel_value * 100
+                except TypeError as e:
+                    logger.error(e)
+                    logger.error(f"{range_name = }, {json_value = }, {excel_value = }")
             else:
                 percent_change = 100.0
 

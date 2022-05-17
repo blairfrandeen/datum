@@ -96,6 +96,7 @@ def export_measurements(json_export_file, nxSession=None):
         markId2 = nxSession.SetUndoMark(
             NXOpen.Session.MarkVisibility.Visible, "Update Session"
         )
+        # TODO: Error handling of NXOpen.NXException / Update Undo happens
         nxSession.UpdateManager.DoInterpartUpdate(markId2)
         workPart = nxSession.Parts.Work
 
