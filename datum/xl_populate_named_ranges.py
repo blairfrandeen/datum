@@ -14,6 +14,7 @@ import logging
 import logging.config
 from pathlib import Path
 from typing import List, Optional, Union
+from requests import JSONDecodeError
 
 import xlwings as xw
 
@@ -234,29 +235,49 @@ def write_named_ranges(
         print("Aborted.")
 
 
+def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
+    """Check that a dictionary has the required keys.
+
+    Ensure keys are not empty lists. Warn if keys not found."""
+    for key in keys_to_check:
+        if key not in target_dict.keys():
+            logger.warning(f"Key {key} not found.")
+            return False
+        if isinstance(target_dict[key], (list, dict)) and len(target_dict[key]) == 0:
+            logger.warning(f"Key {key} has no entires.")
+            return False
+
+    return True
+
+
+#TODO: Consider refactor of funciton name
 def get_json_measurement_names(json_file: str) -> Optional[dict]:
+    """Load JSON measurement dict from a JSON file."""
     try:
         with open(json_file, "r") as json_file_handle:
             json_data: dict = json.load(json_file_handle)
     except FileNotFoundError:
         logger.error(f"Unable to open {json_file}")
         return None
+    except json.decoder.JSONDecodeError:
+        logger.error(f"JSON file {json_file} is corrupt.")
+        return None
 
     json_named_measurements: dict = dict()
-    if "measurements" not in json_data.keys():
-        logger.error(f"JSON file {json_file} has no measurement keys.")
-        return None
-    if len(json_data["measurements"]) == 0:
-        logger.error(f"JSON file {json_file} has no measurement objects.")
+    if not check_dict_keys(json_data, ["measurements"]):
         return None
 
     for measurement in json_data["measurements"]:
         # TODO: Verify that each measurement has at least a name
-        # and an expression
-        measurement_name: str = measurement["name"]
+        # and an expression with a value
+        if not check_dict_keys(measurement, ["name", "expressions"]):
+            continue
+        
         # replace spaces with underscores - no spaces allowed in excel range names
-        measurement_name = measurement_name.replace(" ", "_")
+        measurement_name: str = measurement["name"].replace(" ", "_")
         for expr in measurement["expressions"]:
+            if not check_dict_keys(expr, ["name", "type", "value"]):
+                continue
             expression_name: str = expr["name"]
             range_name: str = f"{measurement_name}.{expression_name}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
