@@ -164,7 +164,7 @@ def report_difference(old_value: Optional[Union[int, float, str, datetime.dateti
     return None
 
 def print_columns(widths: list, values: list, decimals: int = 3,
-    na_string: str = "N/A") -> None:
+    na_string: str = "-") -> None:
     if len(widths) != len(values):
         raise IndexError("Mismatch of columns & values.")
     alignments = ['<', '>', '>', '>'] # align left for first column
@@ -173,23 +173,35 @@ def print_columns(widths: list, values: list, decimals: int = 3,
             print("{val:{al}{wid}.{prec}}".format(val=value, al=alignments[column],
                 wid=widths[column], prec=decimals), end='')
         elif isinstance(value, str):
-            print("{val:{al}{wid}}".format(val=value, al="<",
+            # truncate extra long strings
+            if len(value) > widths[column]:
+                num_chars = int(widths[column] / 2) - 3
+                value = value[:num_chars] + '...' + value[-num_chars:]
+            print("{val:{al}{wid}}".format(val=value, al=alignments[column],
+                wid=widths[column]), end='')
+        elif isinstance(value, datetime.datetime):
+            datestr = value.strftime('%Y-%m-%d')
+            print("{val:{al}{wid}}".format(val=datestr, al=">",
+                wid=widths[column]), end='')
+        elif isinstance(value, datetime.timedelta):
+            date_delta = f"{value.days} days"
+            print("{val:{al}{wid}}".format(val=date_delta, al=">",
                 wid=widths[column]), end='')
         elif value is None:
-            print("{val:{al}{wid}}".format(val=na_string, al=">",
+            print("{val:{al}{wid}}".format(val=na_string, al="^",
                 wid=widths[column]), end='')
-    print('')
+    print() # newline
 
 def preview_named_range_update(existing_values: dict,
-    new_values: dict, decimals: int = 3, min_diff: float = 0.0) -> None:
+    new_values: dict, decimals: int = 3, min_diff: float = 0.001) -> None:
     """Print out list of values that will be overwritten."""
-    column_widths = [42, 12, 12, 15]
+    column_widths = [36, 17, 17, 17]
     column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
     underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
+    print() # newline
     print_columns(column_widths, column_headings)
     print_columns(column_widths, underlines)
 
-    column_widths = "{0:<42} {1:>12.3f} {2:>12.3f} {3:>15.2f}"
 
     for range_name in new_values.keys():
         json_value = new_values[range_name]
@@ -201,54 +213,22 @@ def preview_named_range_update(existing_values: dict,
                     json_item = json_value[json_item]
                 else:
                     item_name = f"{range_name}[{index}]"
-                if not isinstance(json_item, (int, float)):
-                    logger.warning("List and dictionary items must be numbers.")
-                    continue
-                try:
+                if isinstance(excel_value, list):
                     excel_item = excel_value[index]
-                except TypeError:  # if excel value not a list
-                    excel_item = excel_value
-                except IndexError:  # if excel range not popualted
-                    excel_item = 0.0
-
-                # TODO: Better handling for empty cells
-                # quick fix is to populate cells with junk data
-                if excel_item != 0 and excel_value is not None:
-                    try:
-                        percent_change = (json_item - excel_item) / excel_item * 100
-                    except TypeError as e:
-                        logger.error(e)
-                        logger.error(f"{range_name = }, {json_value = }, {excel_value = }")
                 else:
-                    percent_change = 100.0
-                print(
-                    f"{column_widths}%".format(
-                        item_name, excel_item, json_item, percent_change
-                    )
-                )
-        elif isinstance(json_value, str):
-            print(f"String handling for {range_name} not implemented.")
+                    excel_item = excel_value
+
+                difference = report_difference(excel_item, json_item)
+                if isinstance(difference, float) and abs(difference) < min_diff:
+                    continue
+                print_columns(column_widths, [item_name, excel_item, json_item,
+                    difference])
         else:
-            # TODO: Better handling for empty cells
-            try:
-                excel_value = float(excel_value)
-            except TypeError:
-                excel_value = 0
-            if excel_value != 0 and excel_value is not None:
-                try:
-                    percent_change = (json_value - excel_value) / excel_value * 100
-                except TypeError as e:
-                    logger.error(e)
-                    logger.error(f"{range_name = }, {json_value = }, {excel_value = }")
-            else:
-                percent_change = 100.0
-
-            print(
-                f"{column_widths}%".format(
-                    range_name, excel_value, json_value, percent_change
-                )
-            )
-
+            difference = report_difference(excel_value, json_value)
+            if isinstance(difference, float) and abs(difference) < min_diff:
+                continue
+            print_columns(column_widths, [range_name, excel_value, json_value,
+                difference])
 
 def write_named_ranges(
     exiting_values: dict,

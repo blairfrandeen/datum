@@ -104,6 +104,7 @@ class TestUtilities(unittest.TestCase):
         floats = ["Your mom lol", 42.5, 95.2, .738]
         no_change = ["Your mom lol", "she sits", "around the house", None]
         mostly_none = ['Nothing', None, None, None]
+        print() # newline
         xlpnr.print_columns(column_widths, column_headings)
         xlpnr.print_columns(column_widths, underlines)
         xlpnr.print_columns(column_widths, floats)
@@ -114,7 +115,7 @@ class TestUtilities(unittest.TestCase):
         xlpnr.print_columns(column_widths,[
             "Birthdays", test_date_1, test_date_2, test_date_2 - test_date_1
         ])
-        assert 0
+        assert 1
 
 class TestXL(unittest.TestCase):
     def setUp(self):
