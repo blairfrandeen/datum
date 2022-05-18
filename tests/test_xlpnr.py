@@ -54,6 +54,49 @@ class TestJSON(unittest.TestCase):
         assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
         assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
 
+class TestUtilities(unittest.TestCase):
+    def test_report_difference(self):
+        test_date_1 = datetime.datetime(1984,6,17)
+        test_date_2 = datetime.datetime(1982,6,25)
+        # test comparison between any combination of
+        # int, float, string, date, and None
+        int_str = (7, 'seven')
+        int_int = (7, 8)
+        int_flt = (7, 7.5)
+        flt_flt = (5.5, 7.5)
+        flt_str = (7.5, 'seven and a half')
+        str_str = ("seven", "eight")
+        non_non = (None, None)
+        int_non = (7, None)
+        flt_non = (7.5, None)
+        str_non = ('seven', None)
+        dat_str = (test_date_1, "Blair's Birthday")
+        dat_non = (test_date_1, None)
+        dat_int = (test_date_1, 7)
+        dat_flt = (test_date_1, 7.5)
+        dat_dat = (test_date_1, test_date_2)
+        zer_int = (0, 7)
+        zer_flt = (0, 7.5)
+
+        assert xlpnr.report_difference(*int_int) == 1/7
+        assert xlpnr.report_difference(*int_flt) == (7.5 - 7) / 7
+        assert xlpnr.report_difference(*flt_flt) == 2 / 5.5
+        assert xlpnr.report_difference(*dat_dat) == datetime.timedelta(days=-723)
+        assert xlpnr.report_difference(*zer_int) is None
+        assert xlpnr.report_difference(*zer_flt) is None
+        assert xlpnr.report_difference(*non_non) is None
+        assert xlpnr.report_difference(*int_non) is None
+        assert xlpnr.report_difference(*flt_non) is None
+        assert xlpnr.report_difference(*str_non) is None
+        assert xlpnr.report_difference(*dat_non) is None
+
+        assert xlpnr.report_difference(*int_str) is None
+        assert xlpnr.report_difference(*flt_str) is None
+        assert xlpnr.report_difference(*str_str) is None
+        assert xlpnr.report_difference(*dat_str) is None
+        assert xlpnr.report_difference(*dat_int) is None
+        assert xlpnr.report_difference(*dat_flt) is None
+
 
 class TestXL(unittest.TestCase):
     def setUp(self):
