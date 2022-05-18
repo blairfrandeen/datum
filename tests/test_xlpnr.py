@@ -1,10 +1,10 @@
 import datetime
 import logging
 import os
-import pytest
 import unittest
 from unittest.mock import patch
 
+import pytest
 import xlwings as xw
 
 import datum.xl_populate_named_ranges as xlpnr
@@ -39,12 +39,10 @@ class TestJSON(unittest.TestCase):
 
     def test_check_dict_keys(self):
         test_dict = {
-            "test_key1": [
-                "item 1", "item 2"
-            ],
+            "test_key1": ["item 1", "item 2"],
             "test_key2": [],
-            "test_key4": [ 1, 2, 3 ],
-            "test_non_list": 5
+            "test_key4": [1, 2, 3],
+            "test_non_list": 5,
         }
         assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
         assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
@@ -54,22 +52,23 @@ class TestJSON(unittest.TestCase):
         assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
         assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
 
+
 class TestUtilities(unittest.TestCase):
     def test_report_difference(self):
-        test_date_1 = datetime.datetime(1984,6,17)
-        test_date_2 = datetime.datetime(1982,6,25)
+        test_date_1 = datetime.datetime(1984, 6, 17)
+        test_date_2 = datetime.datetime(1982, 6, 25)
         # test comparison between any combination of
         # int, float, string, date, and None
-        int_str = (7, 'seven')
+        int_str = (7, "seven")
         int_int = (7, 8)
         int_flt = (7, 7.5)
         flt_flt = (5.5, 7.5)
-        flt_str = (7.5, 'seven and a half')
+        flt_str = (7.5, "seven and a half")
         str_str = ("seven", "eight")
         non_non = (None, None)
         int_non = (7, None)
         flt_non = (7.5, None)
-        str_non = ('seven', None)
+        str_non = ("seven", None)
         dat_str = (test_date_1, "Blair's Birthday")
         dat_non = (test_date_1, None)
         dat_int = (test_date_1, 7)
@@ -78,7 +77,7 @@ class TestUtilities(unittest.TestCase):
         zer_int = (0, 7)
         zer_flt = (0, 7.5)
 
-        assert xlpnr.report_difference(*int_int) == 1/7
+        assert xlpnr.report_difference(*int_int) == 1 / 7
         assert xlpnr.report_difference(*int_flt) == (7.5 - 7) / 7
         assert xlpnr.report_difference(*flt_flt) == 2 / 5.5
         assert xlpnr.report_difference(*dat_dat) == datetime.timedelta(days=-723)
@@ -101,21 +100,23 @@ class TestUtilities(unittest.TestCase):
         column_widths = [42, 15, 15, 15]
         column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
         underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
-        floats = ["Your mom lol", 42.5, 95.2, .738]
+        floats = ["Your mom lol", 42.5, 95.2, 0.738]
         no_change = ["Your mom lol", "she sits", "around the house", None]
-        mostly_none = ['Nothing', None, None, None]
-        print() # newline
+        mostly_none = ["Nothing", None, None, None]
+        print()  # newline
         xlpnr.print_columns(column_widths, column_headings)
         xlpnr.print_columns(column_widths, underlines)
         xlpnr.print_columns(column_widths, floats)
         xlpnr.print_columns(column_widths, no_change)
         xlpnr.print_columns(column_widths, mostly_none)
-        test_date_1 = datetime.datetime(1984,6,17)
-        test_date_2 = datetime.datetime(1982,6,25)
-        xlpnr.print_columns(column_widths,[
-            "Birthdays", test_date_1, test_date_2, test_date_2 - test_date_1
-        ])
+        test_date_1 = datetime.datetime(1984, 6, 17)
+        test_date_2 = datetime.datetime(1982, 6, 25)
+        xlpnr.print_columns(
+            column_widths,
+            ["Birthdays", test_date_1, test_date_2, test_date_2 - test_date_1],
+        )
         assert 1
+
 
 class TestXL(unittest.TestCase):
     def setUp(self):

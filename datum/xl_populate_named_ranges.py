@@ -147,61 +147,81 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     return backup_path
 
 
-def report_difference(old_value: Optional[Union[int, float, str, datetime.datetime]],
-    new_value: Optional[Union[int, float, str, datetime.datetime]])\
-    -> Optional[Union[float, datetime.timedelta]]:
+def report_difference(
+    old_value: Optional[Union[int, float, str, datetime.datetime]],
+    new_value: Optional[Union[int, float, str, datetime.datetime]],
+) -> Optional[Union[float, datetime.timedelta]]:
     """Report the difference between any two instances of
     int, float, str, date or None. Return None if no numerical
     comparison can be made. Return percent difference for ints and floats.
     Return timedelta for comparison of dates."""
     if old_value == 0:
-        return None # otherwise divide by zero error
-    if isinstance(old_value, datetime.datetime) and isinstance(new_value, datetime.datetime):
+        return None  # otherwise divide by zero error
+    if isinstance(old_value, datetime.datetime) and isinstance(
+        new_value, datetime.datetime
+    ):
         return new_value - old_value
     if isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
         return (new_value - old_value) / old_value
 
     return None
 
-def print_columns(widths: list, values: list, decimals: int = 3,
-    na_string: str = "-") -> None:
+
+def print_columns(
+    widths: list, values: list, decimals: int = 3, na_string: str = "-"
+) -> None:
     if len(widths) != len(values):
         raise IndexError("Mismatch of columns & values.")
-    alignments = ['<', '>', '>', '>'] # align left for first column
+    alignments = ["<", ">", ">", ">"]  # align left for first column
     for column, value in enumerate(values):
         if isinstance(value, float):
-            print("{val:{al}{wid}.{prec}}".format(val=value, al=alignments[column],
-                wid=widths[column], prec=decimals), end='')
+            print(
+                "{val:{al}{wid}.{prec}}".format(
+                    val=value, al=alignments[column], wid=widths[column], prec=decimals
+                ),
+                end="",
+            )
         elif isinstance(value, str):
             # truncate extra long strings
             if len(value) > widths[column]:
                 num_chars = int(widths[column] / 2) - 3
-                value = value[:num_chars] + '...' + value[-num_chars:]
-            print("{val:{al}{wid}}".format(val=value, al=alignments[column],
-                wid=widths[column]), end='')
+                value = value[:num_chars] + "..." + value[-num_chars:]
+            print(
+                "{val:{al}{wid}}".format(
+                    val=value, al=alignments[column], wid=widths[column]
+                ),
+                end="",
+            )
         elif isinstance(value, datetime.datetime):
-            datestr = value.strftime('%Y-%m-%d')
-            print("{val:{al}{wid}}".format(val=datestr, al=">",
-                wid=widths[column]), end='')
+            datestr = value.strftime("%Y-%m-%d")
+            print(
+                "{val:{al}{wid}}".format(val=datestr, al=">", wid=widths[column]),
+                end="",
+            )
         elif isinstance(value, datetime.timedelta):
             date_delta = f"{value.days} days"
-            print("{val:{al}{wid}}".format(val=date_delta, al=">",
-                wid=widths[column]), end='')
+            print(
+                "{val:{al}{wid}}".format(val=date_delta, al=">", wid=widths[column]),
+                end="",
+            )
         elif value is None:
-            print("{val:{al}{wid}}".format(val=na_string, al="^",
-                wid=widths[column]), end='')
-    print() # newline
+            print(
+                "{val:{al}{wid}}".format(val=na_string, al="^", wid=widths[column]),
+                end="",
+            )
+    print()  # newline
 
-def preview_named_range_update(existing_values: dict,
-    new_values: dict, decimals: int = 3, min_diff: float = 0.001) -> None:
+
+def preview_named_range_update(
+    existing_values: dict, new_values: dict, decimals: int = 3, min_diff: float = 0.001
+) -> None:
     """Print out list of values that will be overwritten."""
     column_widths = [36, 17, 17, 17]
     column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
     underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
-    print() # newline
+    print()  # newline
     print_columns(column_widths, column_headings)
     print_columns(column_widths, underlines)
-
 
     for range_name in new_values.keys():
         json_value = new_values[range_name]
@@ -221,14 +241,17 @@ def preview_named_range_update(existing_values: dict,
                 difference = report_difference(excel_item, json_item)
                 if isinstance(difference, float) and abs(difference) < min_diff:
                     continue
-                print_columns(column_widths, [item_name, excel_item, json_item,
-                    difference])
+                print_columns(
+                    column_widths, [item_name, excel_item, json_item, difference]
+                )
         else:
             difference = report_difference(excel_value, json_value)
             if isinstance(difference, float) and abs(difference) < min_diff:
                 continue
-            print_columns(column_widths, [range_name, excel_value, json_value,
-                difference])
+            print_columns(
+                column_widths, [range_name, excel_value, json_value, difference]
+            )
+
 
 def write_named_ranges(
     exiting_values: dict,
@@ -275,7 +298,7 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
     return True
 
 
-#TODO: Consider refactor of funciton name
+# TODO: Consider refactor of funciton name
 def get_json_measurement_names(json_file: str) -> Optional[dict]:
     """Load JSON measurement dict from a JSON file."""
     try:
@@ -386,6 +409,8 @@ def update_named_ranges(
         range_update_buffer[range] = source_data[range]
         range_undo_buffer[range] = target_data[range]
 
-    write_named_ranges(range_undo_buffer, range_update_buffer, target, source_str, backup)
+    write_named_ranges(
+        range_undo_buffer, range_update_buffer, target, source_str, backup
+    )
 
     return range_undo_buffer
