@@ -163,22 +163,37 @@ def report_difference(old_value: Optional[Union[int, float, str, datetime.dateti
 
     return None
 
-def preview_named_range_update(range_update_buffer, workbook):
-    """Print out list of values that will be overwritten."""
-    column_widths = "{0:<42} {1:>12.3f} {2:>12.3f} {3:>15.2f}"
-    print("")
-    print(
-        "{0:<42} {1:>12} {2:>12} {3:>15}".format(
-            "NAME", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"
-        )
-    )
-    print(
-        "{0:<42} {1:>12} {2:>12} {3:>15}".format("-" * 20, "-" * 12, "-" * 12, "-" * 15)
-    )
+def print_columns(widths: list, values: list, decimals: int = 3,
+    na_string: str = "N/A") -> None:
+    if len(widths) != len(values):
+        raise IndexError("Mismatch of columns & values.")
+    alignments = ['<', '>', '>', '>'] # align left for first column
+    for column, value in enumerate(values):
+        if isinstance(value, float):
+            print("{val:{al}{wid}.{prec}}".format(val=value, al=alignments[column],
+                wid=widths[column], prec=decimals), end='')
+        elif isinstance(value, str):
+            print("{val:{al}{wid}}".format(val=value, al="<",
+                wid=widths[column]), end='')
+        elif value is None:
+            print("{val:{al}{wid}}".format(val=na_string, al=">",
+                wid=widths[column]), end='')
+    print('')
 
-    for range_name in range_update_buffer.keys():
-        json_value = range_update_buffer[range_name]
-        excel_value = read_named_range(workbook, range_name)
+def preview_named_range_update(existing_values: dict,
+    new_values: dict, decimals: int = 3, min_diff: float = 0.0) -> None:
+    """Print out list of values that will be overwritten."""
+    column_widths = [42, 12, 12, 15]
+    column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
+    underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
+    print_columns(column_widths, column_headings)
+    print_columns(column_widths, underlines)
+
+    column_widths = "{0:<42} {1:>12.3f} {2:>12.3f} {3:>15.2f}"
+
+    for range_name in new_values.keys():
+        json_value = new_values[range_name]
+        excel_value = existing_values[range_name]
         if isinstance(json_value, (list, dict)):
             for index, json_item in enumerate(json_value):
                 if isinstance(json_value, dict):
@@ -236,14 +251,15 @@ def preview_named_range_update(range_update_buffer, workbook):
 
 
 def write_named_ranges(
+    exiting_values: dict,
+    new_values: dict,
     workbook: xw.main.Book,
-    range_update_buffer: dict,
     source_str: str,
     backup: bool = False,
 ) -> None:
     """Update named ranges in a workbook from a dictionary."""
 
-    preview_named_range_update(range_update_buffer, workbook)
+    preview_named_range_update(exiting_values, new_values)
 
     print("The values listed above will be overwritten.")
     # TODO: Add argument to function to skip confirmation
@@ -258,8 +274,8 @@ def write_named_ranges(
             Source: {source_str}\n\
             Target: {workbook.fullname}"
         )
-        for range in range_update_buffer.keys():
-            write_named_range(workbook, range, range_update_buffer[range])
+        for range in new_values.keys():
+            write_named_range(workbook, range, new_values[range])
     else:
         print("Aborted.")
 
@@ -383,13 +399,13 @@ def update_named_ranges(
     # find range names that occur both in Excel and JSON
     ranges_to_update: list = list(source_data.keys() & target_data.keys())
 
-    range_update_buffer = dict()
-    range_undo_buffer = dict()
+    range_update_buffer: dict = dict()
+    range_undo_buffer: dict = dict()
 
     for range in ranges_to_update:
         range_update_buffer[range] = source_data[range]
         range_undo_buffer[range] = target_data[range]
 
-    write_named_ranges(target, range_update_buffer, source_str, backup)
+    write_named_ranges(range_undo_buffer, range_update_buffer, target, source_str, backup)
 
     return range_undo_buffer
