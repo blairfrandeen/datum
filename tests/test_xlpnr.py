@@ -82,6 +82,7 @@ class TestUtilities(unittest.TestCase):
         assert xlpnr.report_difference(*int_flt) == (7.5 - 7) / 7
         assert xlpnr.report_difference(*flt_flt) == 2 / 5.5
         assert xlpnr.report_difference(*dat_dat) == datetime.timedelta(days=-723)
+
         assert xlpnr.report_difference(*zer_int) is None
         assert xlpnr.report_difference(*zer_flt) is None
         assert xlpnr.report_difference(*non_non) is None
@@ -89,7 +90,6 @@ class TestUtilities(unittest.TestCase):
         assert xlpnr.report_difference(*flt_non) is None
         assert xlpnr.report_difference(*str_non) is None
         assert xlpnr.report_difference(*dat_non) is None
-
         assert xlpnr.report_difference(*int_str) is None
         assert xlpnr.report_difference(*flt_str) is None
         assert xlpnr.report_difference(*str_str) is None
@@ -97,6 +97,17 @@ class TestUtilities(unittest.TestCase):
         assert xlpnr.report_difference(*dat_int) is None
         assert xlpnr.report_difference(*dat_flt) is None
 
+    def test_print_columns(self):
+        column_widths = [42, 15, 15, 15]
+        column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
+        underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
+        floats = ["Your mom lol", 42.5, 95.2, .738]
+        no_change = ["Your mom lol", "she sits", "around the house", None]
+        xlpnr.print_columns(column_widths, column_headings)
+        xlpnr.print_columns(column_widths, underlines)
+        xlpnr.print_columns(column_widths, floats)
+        xlpnr.print_columns(column_widths, no_change)
+        assert 0
 
 class TestXL(unittest.TestCase):
     def setUp(self):
