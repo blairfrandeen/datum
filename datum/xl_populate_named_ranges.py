@@ -8,13 +8,12 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
-from email.generator import Generator
+import datetime
 import json
 import logging
 import logging.config
 from pathlib import Path
 from typing import List, Optional, Union
-from requests import JSONDecodeError
 
 import xlwings as xw
 
@@ -147,6 +146,22 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
 
     return backup_path
 
+
+def report_difference(old_value: Optional[Union[int, float, str, datetime.datetime]],
+    new_value: Optional[Union[int, float, str, datetime.datetime]])\
+    -> Optional[Union[float, datetime.timedelta]]:
+    """Report the difference between any two instances of
+    int, float, str, date or None. Return None if no numerical
+    comparison can be made. Return percent difference for ints and floats.
+    Return timedelta for comparison of dates."""
+    if old_value == 0:
+        return None # otherwise divide by zero error
+    if isinstance(old_value, datetime.datetime) and isinstance(new_value, datetime.datetime):
+        return new_value - old_value
+    if isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+        return (new_value - old_value) / old_value
+
+    return None
 
 def preview_named_range_update(range_update_buffer, workbook):
     """Print out list of values that will be overwritten."""
@@ -286,7 +301,7 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
         # and an expression with a value
         if not check_dict_keys(measurement, ["name", "expressions"]):
             continue
-        
+
         # replace spaces with underscores - no spaces allowed in excel range names
         measurement_name: str = measurement["name"].replace(" ", "_")
         for expr in measurement["expressions"]:
