@@ -103,10 +103,17 @@ class TestUtilities(unittest.TestCase):
         underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
         floats = ["Your mom lol", 42.5, 95.2, .738]
         no_change = ["Your mom lol", "she sits", "around the house", None]
+        mostly_none = ['Nothing', None, None, None]
         xlpnr.print_columns(column_widths, column_headings)
         xlpnr.print_columns(column_widths, underlines)
         xlpnr.print_columns(column_widths, floats)
         xlpnr.print_columns(column_widths, no_change)
+        xlpnr.print_columns(column_widths, mostly_none)
+        test_date_1 = datetime.datetime(1984,6,17)
+        test_date_2 = datetime.datetime(1982,6,25)
+        xlpnr.print_columns(column_widths,[
+            "Birthdays", test_date_1, test_date_2, test_date_2 - test_date_1
+        ])
         assert 0
 
 class TestXL(unittest.TestCase):
