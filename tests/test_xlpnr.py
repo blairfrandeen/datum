@@ -18,39 +18,39 @@ JSON_WITHOUT_USEFUL_DATA = "tests/json/useless.json"
 TEST_EXCEL_WB = "tests/xl/datum_excel_tests.xlsx"
 
 
-class TestJSON(unittest.TestCase):
-    def test_get_json_measurement_names(self):
-        valid_names = xlpnr.get_json_measurement_names(TEST_JSON_FILE)
-        self.assertIsInstance(valid_names, dict)
+def test_get_json_measurement_names():
+    valid_names = xlpnr.get_json_measurement_names(TEST_JSON_FILE)
+    assert isinstance (valid_names, dict)
 
-        no_names = xlpnr.get_json_measurement_names(JSON_WITHOUT_USEFUL_DATA)
-        self.assertIsNone(no_names)
+    no_names = xlpnr.get_json_measurement_names(JSON_WITHOUT_USEFUL_DATA)
+    assert no_names is None
 
-        non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
-        self.assertIsNone(non_existant_json)
+    non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
+    assert non_existant_json is None
 
-        broken_json = xlpnr.get_json_measurement_names("tests/json/broken.json")
-        self.assertIsNone(broken_json)
+    broken_json = xlpnr.get_json_measurement_names("tests/json/broken.json")
+    assert broken_json is None
 
-        no_measurements = xlpnr.get_json_measurement_names(
-            "tests/json/no_measurements.json"
-        )
-        self.assertIsNone(no_measurements)
+    no_measurements = xlpnr.get_json_measurement_names(
+        "tests/json/no_measurements.json"
+    )
+    assert no_measurements is None
 
-    def test_check_dict_keys(self):
-        test_dict = {
-            "test_key1": ["item 1", "item 2"],
-            "test_key2": [],
-            "test_key4": [1, 2, 3],
-            "test_non_list": 5,
-        }
-        assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
-        assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
-        assert xlpnr.check_dict_keys(test_dict, ["test_key3"]) is False
-        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key2"]) is False
-        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
-        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
-        assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
+
+def test_check_dict_keys():
+    test_dict = {
+        "test_key1": ["item 1", "item 2"],
+        "test_key2": [],
+        "test_key4": [1, 2, 3],
+        "test_non_list": 5,
+    }
+    assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
+    assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
+    assert xlpnr.check_dict_keys(test_dict, ["test_key3"]) is False
+    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key2"]) is False
+    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
+    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
+    assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
 
 
 class TestUtilities(unittest.TestCase):
@@ -103,6 +103,7 @@ class TestUtilities(unittest.TestCase):
         floats = ["Your mom lol", 42.5, 95.2, 0.738]
         no_change = ["Your mom lol", "she sits", "around the house", None]
         mostly_none = ["Nothing", None, None, None]
+        too_many_values = list(range(10))
         print()  # newline
         xlpnr.print_columns(column_widths, column_headings)
         xlpnr.print_columns(column_widths, underlines)
@@ -115,6 +116,11 @@ class TestUtilities(unittest.TestCase):
             column_widths,
             ["Birthdays", test_date_1, test_date_2, test_date_2 - test_date_1],
         )
+        with pytest.raises(IndexError):
+            xlpnr.print_columns(column_widths, too_many_values)
+
+        with pytest.raises(TypeError):
+            xlpnr.print_columns(['1', 2, 3.4, 'five'], floats)
         assert 1
 
 
@@ -255,6 +261,7 @@ class TestXL(unittest.TestCase):
         assert (
             xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None
         )
+        
         # no_measurements = xlpnr.get_json_measurement_names(
         #     "tests/xl/no_measurements.json"
         # )

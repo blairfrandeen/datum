@@ -172,6 +172,8 @@ def print_columns(
 ) -> None:
     if len(widths) != len(values):
         raise IndexError("Mismatch of columns & values.")
+    if any([not isinstance(item, int) for item in widths]):
+        raise TypeError("Column widths must be integers")
     alignments = ["<", ">", ">", ">"]  # align left for first column
     for column, value in enumerate(values):
         if isinstance(value, float):
@@ -289,10 +291,10 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
     Ensure keys are not empty lists. Warn if keys not found."""
     for key in keys_to_check:
         if key not in target_dict.keys():
-            logger.warning(f"Key {key} not found.")
+            logger.warning(f"Key \"{key}\" not found.")
             return False
         if isinstance(target_dict[key], (list, dict)) and len(target_dict[key]) == 0:
-            logger.warning(f"Key {key} has no entires.")
+            logger.warning(f"Key \"{key}\" has no entires.")
             return False
 
     return True
@@ -313,6 +315,7 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
 
     json_named_measurements: dict = dict()
     if not check_dict_keys(json_data, ["measurements"]):
+        logger.warning(f"No \"measurement\" field in {json_file}")
         return None
 
     for measurement in json_data["measurements"]:
