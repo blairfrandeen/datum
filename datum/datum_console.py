@@ -53,6 +53,16 @@ class ConsoleSession:
         """Display current working directory"""
         print(os.getcwd())
 
+    def chdir(self, *args):
+        if len(args) < 1:
+            print("Change directory: cd <directory>")
+        else:
+            try:
+                os.chdir(args[0])
+                print(f"Changed dir to {os.getcwd()}")
+            except FileNotFoundError:
+                print(f"Directory not found.")
+
 
 def user_select_item(item_list, item_type="choice"):
     """Given a list of files or workbooks, enumerate them and
@@ -176,7 +186,7 @@ def main():
     cs = ConsoleSession()
     # TODO: Add backup command
     command_list = [
-        (["cd"], os.chdir),
+        (["cd"], cs.chdir),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
         (["pwd"], cs.pwd),
