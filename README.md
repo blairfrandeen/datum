@@ -11,13 +11,11 @@ Currently this code includes two modules that allow the user to transfer limited
 - See `requirements.txt` for full list of modules.
 
 ### Pulling measurement data from NX with `nx_get_measurements.py`
-Open a work part or assembly that has saved measurement features. Use the `Measure` tool and ensure that `associative` is checked under settings - the measurement should show up in the feature navigator. Give your measurement a meaningful name such as `MASS`, `SURFACE_AREA` or `DIAMETER`.
-
-> NOTE: Only numerical measurements are supported. Points, vectors, and lists will be skipped.
+Open a work part or assembly that has saved measurement features. Use the `Measure` tool and ensure that `associative` is checked under settings - the measurement should show up in the feature navigator. Give your measurement a meaningful name, ideally based on the component. All valid measurements such as points, vectors, surface area, distance, mass, volume, MOI, POI, etc. will be saved.
 
 Ensure the developer tab is activated in NX. See the [NXOpen_Python_tutorials](https://github.com/Foadsf/NXOpen_Python_tutorials) repository for instructions.
 
-Press ALT+F8 to open the journal interface. Navigate to where you saved `nx_get_measurements.py` and run it. If you manage to get `tkinter` to work with the NX python installation, you should get a popup window asking where to save the measurement data. Otherwise it will save your data to `C:\Users\<your_username>\Documents\datum\nx_measurements.json`.
+Press ALT+F8 to open the journal interface. Navigate to where you saved `nx_journals/nx_get_measurements.py` and run it. If you manage to get `tkinter` to work with the NX python installation, you should get a popup window asking where to save the measurement data. Otherwise it will save your data to `C:\Users\<your_username>\Documents\datum\nx_measurements.json`.
 
 #### Adding `tkinter` to the NX installation
 Some additional functionality (file picker) can be added to the NX Python installation. This is hacky af, and at your own risk.
@@ -27,12 +25,30 @@ Some additional functionality (file picker) can be added to the NX Python instal
 
 
 ### Populating named Excel ranges with measurement data
-In your Excel file, you'll need to name the cells that you want to autopopulate. Select each cell and choose Formulas -> Define Name. Note that named ranges of multiple cells are not supported. These range names must correspond to the names you gave your measurement features in NX:
-- If the measurement result is a **single number**, simply match the name of the NX feature. An example of this is a measurement of the distance between two points.
-- If the measurement result has **more than one expression**, you'll need to name the range `<FEATURE_NAME>.expression_name` where:
-    - `<FEATURE_NAME>` is the name of the feature in NX
-    - `expression_name` is the type of expression you want. Examples are `mass`, `area`, or `radius`.
+In your Excel file, you'll need to name the cells that you want to autopopulate. Select each cell and choose Formulas -> Define Name. You can select single cells, or multiple cells to define vectors, points, or lists. Multiple cells can be oriented horizontally or vertically. 
 
-Once the Excel sheet is set up, run `datum_console.py` from the directory where the JSON file was saved. The script will prompt you to choose the JSON file to read from (searches working directory only), and the Excel file to write to (lists open workbooks detected by xlwings). The script will also give you a preview of values to be overwritten, and prompts you prior to doing so. Some undo functionality is now built in.
+The range names must be in the format `<FEATURE_NAME>.<expression_name>`. `<FEATURE_NAME>` is the name of your NX measurement feature; `<expression_name>` can be one of the following:
+
+**Single Value Expressions**
+- `surface_area`
+- `volume`
+- `mass`
+- `weight`
+- `density`
+- `distance`
+- `angle`
+
+**Multi-Value Expressions**
+- `center_of_mass`
+- `moments_of_inertia`
+- `first_moments_of_inertia`
+- ... and many more
+
+For example, if I wanted to know the mass and center of gravity of my chassis, I would follow these steps:
+1. Make the associative measurement in NX and name it `CHASSIS`
+2. Name a range with a single cell in Excel as `CHASSIS.mass`
+3. Name a range of three cells in Excel `CHASSIS.center_of_mass`
+
+Once the Excel sheet is set up, run `datum/datum_console.py` from the directory where the JSON file was saved. The script will prompt you to choose the JSON file to read from (searches working directory only), and the Excel file to write to (lists open workbooks detected by xlwings). The script will also give you a preview of values to be overwritten, and prompts you prior to doing so. Basic undo functionality is now built in.
 
 Code exists (currently disabled) to save a backup copy of your file as `<filename>_BACKUP.xlsx` in the working directory in case you find running this code regrettable.
