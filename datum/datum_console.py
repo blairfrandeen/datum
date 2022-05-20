@@ -89,12 +89,12 @@ def user_select_item(item_list, item_type="choice", test_flag=False):
         except ValueError:  # if selection is non-integer
             print("Invalid input.")
             if test_flag: break
-            continue
-        if selection_index >= len(item_list) or selection_index < 0:
-            print("Index out of bounds.")
-            if test_flag: break
-            continue
-        return selection_index
+        if isinstance(selection_index, int):
+            if selection_index >= len(item_list) or selection_index < 0:
+                print("Index out of bounds.")
+                if test_flag: break
+            else:
+                return selection_index
 
 
 
@@ -168,17 +168,17 @@ def console(command_list: list, test_flag: bool=False) -> None:
     while user_input != "q":
         user_input = input("> ")
         user_command = user_input.split(" ")[0]
-        if user_command == "":
-            continue
-        user_args = user_input.split(" ")[1:]
-        valid_command = False
-        for cmd in command_list:
-            if user_command in cmd.id:
-                valid_command = True
-                cmd.function(*user_args)
+        if user_command != "":
+            user_args = user_input.split(" ")[1:]
+            valid_command = False
+            for cmd in command_list:
+                if user_command in cmd.id:
+                    valid_command = True
+                    cmd.function(*user_args)
 
-        if not valid_command:
-            print("Unknown command. Type 'h' for help, 'q' to quit.")
+            if not valid_command:
+                print("Unknown command. Type 'h' for help, 'q' to quit.")
+
         if test_flag: break
 
 
@@ -200,4 +200,9 @@ def main():
 
 
 if __name__ == "__main__":
+    from __init__ import __version__, datum_url
+    print("="*40)
+    print(f'DATUM - Version {__version__}')
+    print(datum_url)
+    print("="*40)
     main()
