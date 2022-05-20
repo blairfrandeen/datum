@@ -1,6 +1,5 @@
 import os
-import sys
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional, Union, Callable, Tuple, NoReturn
 from collections import namedtuple
 
 import xlwings as xw
@@ -8,21 +7,23 @@ import xlwings as xw
 from xl_populate_named_ranges import logger, update_named_ranges
 
 
-class ConsoleSession:
-    def __init__(self):
-        self.json_file = None
-        self.excel_workbook = None
-        self.undo_buffer = None
+Command: NamedTuple = namedtuple("Command", "id function")
 
-    def load_measurement(self):
+class ConsoleSession:
+    def __init__(self) -> None:
+        self.json_file: Optional[str] = None
+        self.excel_workbook: Optional[str] = None
+        self.undo_buffer: Optional[dict] = None
+
+    def load_measurement(self) -> None:
         """Load measurement data from a JSON file"""
         self.json_file = user_select_json_file()
 
-    def load_workbook(self):
+    def load_workbook(self) -> None:
         """Select an open Excel workbook to write to"""
         self.excel_workbook = user_select_open_workbook()
 
-    def update_named_ranges(self, backup=False):
+    def update_named_ranges(self, backup: bool = False) -> None:
         """Update named ranges in the Excel file with matching
         data from the JSON measurement file"""
         if not self.json_file:
@@ -30,14 +31,14 @@ class ConsoleSession:
         if not self.excel_workbook:
             self.load_workbook()
         if self.json_file and self.excel_workbook:
-            undo_buffer = update_named_ranges(
+            undo_buffer: dict = update_named_ranges(
                 self.json_file, self.excel_workbook, backup
             )
             # Do not clear undo buffer to None on abort
             if undo_buffer:
                 self.undo_buffer = undo_buffer
 
-    def undo_last_update(self):
+    def undo_last_update(self) -> None:
         if self.undo_buffer:
             self.undo_buffer = update_named_ranges(
                 self.undo_buffer, self.excel_workbook, backup=False
@@ -45,16 +46,17 @@ class ConsoleSession:
         else:
             print("No undo history available.")
 
-    def status(self):
+    def status(self) -> None:
         """Display loaded measurement & loaded workbook"""
         print(f"Loaded Measurement:\t{self.json_file}")
         print(f"Loaded Workbook:\t{self.excel_workbook}")
 
-    def pwd(self):
-        """Display current working directory"""
+    def pwd(self) -> None:
+        """Display current working directory. Wrapper for os.getcwd()"""
         print(os.getcwd())
 
-    def chdir(self, *args):
+    def chdir(self, *args: list) -> None:
+        """Change directory. Wrapper for os.chdir() with error handling"""
         if len(args) < 1:
             print("Change directory: cd <directory>")
         else:
@@ -65,7 +67,10 @@ class ConsoleSession:
                 print(f"Directory not found.")
 
 
-def user_select_item(item_list, item_type="choice", test_flag=False):
+def user_select_item(
+    item_list: List[str],
+    item_type: str = "choice",
+    test_flag: bool = False) -> Optional[int]:
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
 
@@ -81,7 +86,7 @@ def user_select_item(item_list, item_type="choice", test_flag=False):
 
     # keep asking for input until a valid input or quit command received
     while True:
-        selection_index = input(f"Select {item_type} index (q to quit): ")
+        selection_index: Union[str, int] = input(f"Select {item_type} index (q to quit): ")
         if selection_index == "q":
             return None
         try:
@@ -98,7 +103,7 @@ def user_select_item(item_list, item_type="choice", test_flag=False):
 
 
 
-def user_select_open_workbook():
+def user_select_open_workbook() -> Optional[xw.main.Book]:
     if len(xw.apps) == 0:
         logger.error("Excel app not open.")
         return None
@@ -106,25 +111,25 @@ def user_select_open_workbook():
         logger.error("No Excel workbooks are open.")
         return None
 
-    workbook_list = [book.name for book in xw.books]
+    workbook_list: List[str] = [book.name for book in xw.books]
 
-    workbook_index = user_select_item(workbook_list, "Excel Workbook")
+    workbook_index: Optional[int] = user_select_item(workbook_list, "Excel Workbook")
     if workbook_index is None:
         return None
 
     return xw.books[workbook_index]
 
 
-def user_select_json_file():
+def user_select_json_file() -> Optional[str]:
     """Select a JSON file"""
-    json_file_list = []
+    json_file_list: List[str] = []
     # TODO: Document structure change for where files
     # should be kept -- OR -- do recursive directory search
     # such as os.walk()
     for file in os.listdir():
         if file.endswith(".json"):
             json_file_list.append(file)
-    json_index = user_select_item(json_file_list, "JSON file")
+    json_index: Optional[int] = user_select_item(json_file_list, "JSON file")
     if json_index is None:
         return None
 
@@ -133,7 +138,8 @@ def user_select_json_file():
     return json_file_path
 
 
-def console(command_list: list, test_flag: bool=False) -> None:
+def console(command_list: Union[List[Tuple[List[str], Callable]], Command],
+    test_flag: bool=False) -> None:
     """
     Run a console within your python program.
     Some configuration options in JSON file.
@@ -147,9 +153,9 @@ def console(command_list: list, test_flag: bool=False) -> None:
             # print docstring for each command if available
             # otherwise print the function name
             if cmd.function.__doc__:
-                docstr = cmd.function.__doc__
+                docstr: str = cmd.function.__doc__
             else:
-                docstr = cmd.function.__name__
+                docstr: str = cmd.function.__name__
             print(f"\t{cmd.id}\t\t{docstr}")
 
     # Default commands appear at the end
@@ -161,16 +167,15 @@ def console(command_list: list, test_flag: bool=False) -> None:
 
     # Keep formatting neat for command list above
     # while still leveraging named tuples
-    Command = namedtuple("Command", "id function")
     command_list = [Command._make(cmd) for cmd in command_list]
 
-    user_input = None
+    user_input: Optional[str] = None
     while user_input != "q":
         user_input = input("> ")
-        user_command = user_input.split(" ")[0]
+        user_command: str = user_input.split(" ")[0]
         if user_command != "":
-            user_args = user_input.split(" ")[1:]
-            valid_command = False
+            user_args: List[str] = user_input.split(" ")[1:]
+            valid_command: bool = False
             for cmd in command_list:
                 if user_command in cmd.id:
                     valid_command = True
@@ -182,12 +187,12 @@ def console(command_list: list, test_flag: bool=False) -> None:
         if test_flag: break
 
 
-def main():
+def main() -> None:
     # if len(sys.argv) > 1 and sys.argv[1] == "--test":
     #     os.chdir("tests")
-    cs = ConsoleSession()
+    cs: ConsoleSession = ConsoleSession()
     # TODO: Add backup command
-    command_list = [
+    command_list: List[Tuple[List[str], Callable]] = [
         (["cd"], cs.chdir),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
