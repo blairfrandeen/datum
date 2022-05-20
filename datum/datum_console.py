@@ -6,7 +6,6 @@ import xlwings as xw
 # TODO: Make this work for both pytest & when trying to actually run the console
 from xl_populate_named_ranges import logger, update_named_ranges
 
-
 Command: NamedTuple = namedtuple("Command", "id function")
 
 class ConsoleSession:

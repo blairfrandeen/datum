@@ -90,6 +90,42 @@ def test_console(monkeypatch, capsys, console_command_list):
     # assert "Available commands" in captured.out
 
 
+def test_update_named_ranges(console_test_session, monkeypatch):
+    cts = console_test_session
+    # cts.json_file = None
+    # cts.excel_workbook = None
+    def _mock_select_json():
+        print("user_select_json_file")
+        cts.json_file = "json_file"
+    monkeypatch.setattr(cts, "load_measurement", _mock_select_json)
+    def _mock_select_workbook():
+        print("user_select_open_workbook")
+        cts.excel_workbook = "excel_workbook"
+    monkeypatch.setattr(cts, "load_workbook", _mock_select_workbook)
+    def _mock_xlpnr_update(arg1, arg2, arg3):
+        return { "update_success": True }
+    monkeypatch.setattr(dc, "update_named_ranges",
+        _mock_xlpnr_update)
+
+    cts.update_named_ranges()
+    assert cts.json_file == "json_file"
+    assert cts.excel_workbook == "excel_workbook"
+    assert cts.undo_buffer["update_success"] is True
+
+def test_undo(console_test_session, monkeypatch, capsys):
+    def _mock_xlpnr_update(arg1, arg2, backup=False):
+        return { "update_success": True }
+    monkeypatch.setattr(dc, "update_named_ranges",
+        _mock_xlpnr_update)
+    cts = console_test_session
+    cts.undo_last_update()
+    captured = capsys.readouterr()
+    assert "No undo history available." in captured.out
+    cts.undo_buffer = { "update_success": False }
+    cts.undo_last_update()
+    assert cts.undo_buffer["update_success"] is True
+
+
 def test_user_select_item(monkeypatch, capsys):
     empty_list = []
     assert(dc.user_select_item(empty_list, "nothing") is None)
