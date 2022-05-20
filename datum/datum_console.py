@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import List, NamedTuple
 from collections import namedtuple
 
 import xlwings as xw
@@ -64,7 +65,7 @@ class ConsoleSession:
                 print(f"Directory not found.")
 
 
-def user_select_item(item_list, item_type="choice"):
+def user_select_item(item_list, item_type="choice", test_flag=False):
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
 
@@ -80,20 +81,21 @@ def user_select_item(item_list, item_type="choice"):
 
     # keep asking for input until a valid input or quit command received
     while True:
-        print(f"Select {item_type} index (q to quit): ", end="")
-        selection_index = input()
+        selection_index = input(f"Select {item_type} index (q to quit): ")
         if selection_index == "q":
             return None
         try:
             selection_index = int(selection_index)
         except ValueError:  # if selection is non-integer
             print("Invalid input.")
+            if test_flag: break
             continue
         if selection_index >= len(item_list) or selection_index < 0:
             print("Index out of bounds.")
+            if test_flag: break
             continue
-        else:
-            return selection_index
+        return selection_index
+
 
 
 def user_select_open_workbook():
@@ -131,7 +133,7 @@ def user_select_json_file():
     return json_file_path
 
 
-def console(console_session, command_list, config_file=None):
+def console(command_list: list, test_flag: bool=False) -> None:
     """
     Run a console within your python program.
     Some configuration options in JSON file.
@@ -164,8 +166,7 @@ def console(console_session, command_list, config_file=None):
 
     user_input = None
     while user_input != "q":
-        print("> ", end="")
-        user_input = input()
+        user_input = input("> ")
         user_command = user_input.split(" ")[0]
         if user_command == "":
             continue
@@ -178,6 +179,7 @@ def console(console_session, command_list, config_file=None):
 
         if not valid_command:
             print("Unknown command. Type 'h' for help, 'q' to quit.")
+        if test_flag: break
 
 
 def main():
@@ -194,7 +196,7 @@ def main():
         (["u"], cs.update_named_ranges),
         (["z", "undo"], cs.undo_last_update),
     ]
-    console(cs, command_list)
+    console(command_list)
 
 
 if __name__ == "__main__":
