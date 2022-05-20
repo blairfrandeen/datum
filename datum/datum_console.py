@@ -55,7 +55,7 @@ class ConsoleSession:
         """Display current working directory. Wrapper for os.getcwd()"""
         print(os.getcwd())
 
-    def chdir(self, *args: list) -> None:
+    def chdir(self, *args) -> None:
         """Change directory. Wrapper for os.chdir() with error handling"""
         if len(args) < 1:
             print("Change directory: cd <directory>")
@@ -100,6 +100,7 @@ def user_select_item(
                 if test_flag: break
             else:
                 return selection_index
+    return None
 
 
 
@@ -138,8 +139,7 @@ def user_select_json_file() -> Optional[str]:
     return json_file_path
 
 
-def console(command_list: Union[List[Tuple[List[str], Callable]], Command],
-    test_flag: bool=False) -> None:
+def console(command_list: list, test_flag: bool=False) -> None:
     """
     Run a console within your python program.
     Some configuration options in JSON file.
@@ -192,7 +192,7 @@ def main() -> None:
     #     os.chdir("tests")
     cs: ConsoleSession = ConsoleSession()
     # TODO: Add backup command
-    command_list: List[Tuple[List[str], Callable]] = [
+    command_list: list = [
         (["cd"], cs.chdir),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
