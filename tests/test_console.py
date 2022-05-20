@@ -2,6 +2,10 @@ import os
 import pytest
 from datum import datum_console as dc
 
+class MockWorkbook:
+    def __init__(self, name):
+        self.name = name
+
 @pytest.fixture
 def console_test_session():
     return dc.ConsoleSession()
@@ -95,11 +99,9 @@ def test_update_named_ranges(console_test_session, monkeypatch):
     # cts.json_file = None
     # cts.excel_workbook = None
     def _mock_select_json():
-        print("user_select_json_file")
         cts.json_file = "json_file"
     monkeypatch.setattr(cts, "load_measurement", _mock_select_json)
     def _mock_select_workbook():
-        print("user_select_open_workbook")
         cts.excel_workbook = "excel_workbook"
     monkeypatch.setattr(cts, "load_workbook", _mock_select_workbook)
     def _mock_xlpnr_update(arg1, arg2, arg3):
@@ -151,18 +153,46 @@ def test_user_select_item(monkeypatch, capsys):
     monkeypatch.setattr('builtins.input', lambda _: 'q')
     assert dc.user_select_item(valid_list, 'treats', test_flag=True) is None
 
+def test_user_select_workbook(monkeypatch):
+    import xlwings as xw
+    monkeypatch.setattr(xw, 'apps', [])
+    assert dc.user_select_open_workbook() is None
+    monkeypatch.setattr(xw, 'books', [])
+    monkeypatch.setattr(xw, 'apps', ['fake app'])
+    assert dc.user_select_open_workbook() is None
+
+    # mock workbook list
+    wblist = [MockWorkbook(wbname) for wbname in ['wb1', 'wb2', 'wb3']]
+    monkeypatch.setattr(xw, 'books', wblist)
+
+    # mock responses from dc.user_select_item
+    item_selections = iter([0, 1, None])
+    def _mock_select_item(arg1, arg2):
+        return next(item_selections)
+    monkeypatch.setattr(dc, 'user_select_item', _mock_select_item)
+    
+    assert dc.user_select_open_workbook() == wblist[0]
+    assert dc.user_select_open_workbook() == wblist[1]
+    assert dc.user_select_open_workbook() is None
+
 def test_user_select_json_file(monkeypatch):
+    # mock response from os.listdir()
     file_list = [ 'test1.json', 'something.txt', 'test2.json' ]
     monkeypatch.setattr('os.listdir', lambda: file_list)
+    
+    # mock response from os.getcwd()
     monkeypatch.setattr('os.getcwd', lambda: "")
-    monkeypatch.setattr('builtins.input', lambda _: '0')
+    
+    # mock responses from dc.user_select_item
+    item_selections = iter([0, 1, None])
+    def _mock_select_item(arg1, arg2):
+        return next(item_selections)
+    monkeypatch.setattr(dc, 'user_select_item', _mock_select_item)
+
     assert dc.user_select_json_file().endswith(file_list[0])
-
-    monkeypatch.setattr('builtins.input', lambda _: '1')
     assert dc.user_select_json_file().endswith(file_list[2])
-
-    monkeypatch.setattr('builtins.input', lambda _: 'q')
     assert dc.user_select_json_file() is None
+
 
 def test_main(monkeypatch):
     quit_commands = ['q', 'quit']

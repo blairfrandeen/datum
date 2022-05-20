@@ -102,7 +102,6 @@ def user_select_item(
     return None
 
 
-
 def user_select_open_workbook() -> Optional[xw.main.Book]:
     if len(xw.apps) == 0:
         logger.error("Excel app not open.")
