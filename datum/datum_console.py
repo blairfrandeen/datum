@@ -183,8 +183,8 @@ def console(command_list: list, test_flag: bool=False) -> None:
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        os.chdir("tests")
+    # if len(sys.argv) > 1 and sys.argv[1] == "--test":
+    #     os.chdir("tests")
     cs = ConsoleSession()
     # TODO: Add backup command
     command_list = [

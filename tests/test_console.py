@@ -21,10 +21,50 @@ def console_command_list(console_test_session):
     return command_list
 
 def test_main(monkeypatch, capsys):
-    monkeypatch.setattr('__name__', lambda: "__main__")
-    dc()
+    monkeypatch.setattr('sys.argv', lambda: ['--test'])
+    assert 'tests' in os.getpwd()
+    # captured = capsys.readouterr()
+    # assert "DATUM - Version" in captured.out
+
+
+def test_chdir(capsys, console_test_session):
+    # cd with no arguments
+    console_test_session.chdir()
     captured = capsys.readouterr()
-    assert "DATUM - Version" in captured.out
+    assert "Change directory: cd <directory>" in captured.out
+
+    # cd to bad directory
+    console_test_session.chdir('bad_directory')
+    captured = capsys.readouterr()
+    assert "Directory not found" in captured.out
+
+    # cd to bad directory
+    os.makedirs("./temp_test")
+    console_test_session.chdir('temp_test')
+    console_test_session.chdir('..')
+    os.rmdir("./temp_test")
+    captured = capsys.readouterr()
+    assert "temp_test" in captured.out
+
+def test_pwd(capsys, console_test_session):
+    console_test_session.pwd()
+    captured = capsys.readouterr()
+    assert os.getcwd() in captured.out
+
+def test_status(capsys, console_test_session):
+    console_test_session.status()
+    captured = capsys.readouterr()
+    assert "Loaded Measurement:" in captured.out
+
+def test_load_measurement(monkeypatch, console_test_session):
+    monkeypatch.setattr('builtins.input', lambda _: 'q')
+    console_test_session.load_measurement()
+    assert console_test_session.json_file is None
+
+def test_load_workbook(monkeypatch, console_test_session):
+    monkeypatch.setattr('builtins.input', lambda _: 'q')
+    console_test_session.load_workbook()
+    assert console_test_session.excel_workbook is None
 
 def test_console(monkeypatch, capsys, console_command_list):
     bad_commands = ['5', 'gettrdun']
