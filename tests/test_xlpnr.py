@@ -35,23 +35,25 @@ def test_get_json_measurement_names():
     assert no_measurements is None
 
 
-def test_check_dict_keys():
-    test_dict = {
-        "test_key1": ["item 1", "item 2"],
-        "test_key2": [],
-        "test_key4": [1, 2, 3],
-        "test_non_list": 5,
-    }
-    assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
-    assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
-    assert xlpnr.check_dict_keys(test_dict, ["test_key3"]) is False
-    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key2"]) is False
-    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
-    assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
-    assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
 
 
 class TestUtilities(unittest.TestCase):
+    def test_check_dict_keys(self):
+        test_dict = {
+            "test_key1": ["item 1", "item 2"],
+            "test_key2": [],
+            "test_key4": [1, 2, 3],
+            "test_non_list": 5,
+        }
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1"]) is True
+        assert xlpnr.check_dict_keys(test_dict, ["test_key2"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key3"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key2"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
+        assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
+        assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
+
+
     def test_report_difference(self):
         test_date_1 = datetime.datetime(1984, 6, 17)
         test_date_2 = datetime.datetime(1982, 6, 25)

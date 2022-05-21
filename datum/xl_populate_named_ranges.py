@@ -21,30 +21,53 @@ import xlwings as xw
 logging.config.fileConfig("logging.conf")
 logger: logging.Logger = logging.getLogger(__name__)
 
+########################
+## XLWINGS INTERFACES ##
+########################
 
-def xw_get_named_range(
-    workbook: xw.main.Book, range_name: str
-) -> Optional[xw.main.Range]:
-    """Find a named range in an open workbook.
+def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
+    """Create a backup copy of the workbook.
+    Returns the path of the backup copy."""
+    # TODO: Make more robust naming convention
+    # TODO: Verify M365 files are backing up correctly
+    # TODO: Implement unit tests
+    print(f"Backuping up {workbook.name}...")
+    wb_name: str = workbook.name.split(".xlsx")[0]
 
-    Keyword arguments:
-    workbook -- xlwings Book object
-    range_name -- string with range name
+    backup_path = Path(f"{backup_dir}\\{wb_name}_BACKUP.xlsx")
 
-    Returns the range object if found,
-    returns None if not found"""
-    if range_name in workbook.names:
-        if "!#REF!" in workbook.names[range_name].refers_to:
-            logger.error(
-                f"Name {range_name} has a #REF! error. Please fix prior to continuing."
-            )
-            logger.error("Use the name manager to remove or fix any names with errors.")
-            return None
-        rng: xw.main.Range = workbook.names[range_name].refers_to_range
-        return rng
-    else:
-        logger.debug(f"Name {range_name} not found in {workbook}")
+    # Open a new blank workbook
+    backup_wb: xw.main.Book = xw.Book()
+
+    # Copy sheets individually
+    for sheet in workbook.sheets:
+        sheet.copy(after=backup_wb.sheets[0])
+
+    # Delete the first blank sheet
+    backup_wb.sheets[0].delete()
+
+    # Save & close
+    backup_wb.save(path=backup_path)
+    backup_wb.close()
+
+    return backup_path
+
+
+def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
+    # make a dict of named ranges, measurement names, and measurement types
+    workbook_named_ranges = dict()
+    if len(workbook.names) == 0:
+        logger.error(f"workbook{workbook.name} has no named ranges.")
         return None
+    for named_range in workbook.names:
+        # Sometimes Excel puts in hidden names that start
+        # with _xlfn. -- skip these
+        if named_range.name.startswith("_xlfn."):
+            continue
+        range_value = read_named_range(workbook, named_range.name)
+        workbook_named_ranges[named_range.name] = range_value
+
+    return workbook_named_ranges
 
 
 def read_named_range(
@@ -61,16 +84,6 @@ def read_named_range(
         return None
 
     return rng.value
-
-
-def flatten_list(target_list: list):
-    """Flatten any nested list."""
-    for element in target_list:
-        if isinstance(element, list):
-            for sub_element in flatten_list(element):
-                yield sub_element
-        else:
-            yield element
 
 
 def write_named_range(
@@ -119,32 +132,57 @@ def write_named_range(
         return None
 
 
-def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
-    """Create a backup copy of the workbook.
-    Returns the path of the backup copy."""
-    # TODO: Make more robust naming convention
-    # TODO: Verify M365 files are backing up correctly
-    # TODO: Implement unit tests
-    print(f"Backuping up {workbook.name}...")
-    wb_name: str = workbook.name.split(".xlsx")[0]
+def xw_get_named_range(
+    workbook: xw.main.Book, range_name: str
+) -> Optional[xw.main.Range]:
+    """Find a named range in an open workbook.
 
-    backup_path = Path(f"{backup_dir}\\{wb_name}_BACKUP.xlsx")
+    Keyword arguments:
+    workbook -- xlwings Book object
+    range_name -- string with range name
 
-    # Open a new blank workbook
-    backup_wb: xw.main.Book = xw.Book()
+    Returns the range object if found,
+    returns None if not found"""
+    if range_name in workbook.names:
+        if "!#REF!" in workbook.names[range_name].refers_to:
+            logger.error(
+                f"Name {range_name} has a #REF! error. Please fix prior to continuing."
+            )
+            logger.error("Use the name manager to remove or fix any names with errors.")
+            return None
+        rng: xw.main.Range = workbook.names[range_name].refers_to_range
+        return rng
+    else:
+        logger.debug(f"Name {range_name} not found in {workbook}")
+        return None
 
-    # Copy sheets individually
-    for sheet in workbook.sheets:
-        sheet.copy(after=backup_wb.sheets[0])
 
-    # Delete the first blank sheet
-    backup_wb.sheets[0].delete()
+#######################
+###### UTILITIES ######
+#######################
+def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
+    """Check that a dictionary has the required keys.
 
-    # Save & close
-    backup_wb.save(path=backup_path)
-    backup_wb.close()
+    Ensure keys are not empty lists. Warn if keys not found."""
+    for key in keys_to_check:
+        if key not in target_dict.keys():
+            logger.warning(f'Key "{key}" not found.')
+            return False
+        if isinstance(target_dict[key], (list, dict)) and len(target_dict[key]) == 0:
+            logger.warning(f'Key "{key}" has no entires.')
+            return False
 
-    return backup_path
+    return True
+
+
+def flatten_list(target_list: list):
+    """Flatten any nested list."""
+    for element in target_list:
+        if isinstance(element, list):
+            for sub_element in flatten_list(element):
+                yield sub_element
+        else:
+            yield element
 
 
 def report_difference(
@@ -167,138 +205,9 @@ def report_difference(
     return None
 
 
-def print_columns(
-    widths: list, values: list, decimals: int = 3, na_string: str = "-"
-) -> None:
-    if len(widths) != len(values):
-        raise IndexError("Mismatch of columns & values.")
-    if any([not isinstance(item, int) for item in widths]):
-        raise TypeError("Column widths must be integers")
-    alignments = ["<", ">", ">", ">"]  # align left for first column
-    for column, value in enumerate(values):
-        if isinstance(value, float):
-            print(
-                "{val:{al}{wid}.{prec}}".format(
-                    val=value, al=alignments[column], wid=widths[column], prec=decimals
-                ),
-                end="",
-            )
-        elif isinstance(value, str):
-            # truncate extra long strings
-            if len(value) > widths[column]:
-                num_chars = int(widths[column] / 2) - 3
-                value = value[:num_chars] + "..." + value[-num_chars:]
-            print(
-                "{val:{al}{wid}}".format(
-                    val=value, al=alignments[column], wid=widths[column]
-                ),
-                end="",
-            )
-        elif isinstance(value, datetime.datetime):
-            datestr = value.strftime("%Y-%m-%d")
-            print(
-                "{val:{al}{wid}}".format(val=datestr, al=">", wid=widths[column]),
-                end="",
-            )
-        elif isinstance(value, datetime.timedelta):
-            date_delta = f"{value.days} days"
-            print(
-                "{val:{al}{wid}}".format(val=date_delta, al=">", wid=widths[column]),
-                end="",
-            )
-        elif value is None:
-            print(
-                "{val:{al}{wid}}".format(val=na_string, al="^", wid=widths[column]),
-                end="",
-            )
-    print()  # newline
-
-
-def preview_named_range_update(
-    existing_values: dict, new_values: dict, decimals: int = 3, min_diff: float = 0.001
-) -> None:
-    """Print out list of values that will be overwritten."""
-    column_widths = [36, 17, 17, 17]
-    column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
-    underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
-    print()  # newline
-    print_columns(column_widths, column_headings)
-    print_columns(column_widths, underlines)
-
-    for range_name in new_values.keys():
-        json_value = new_values[range_name]
-        excel_value = existing_values[range_name]
-        if isinstance(json_value, (list, dict)):
-            for index, json_item in enumerate(json_value):
-                if isinstance(json_value, dict):
-                    item_name = f"{range_name}[{json_item}]"
-                    json_item = json_value[json_item]
-                else:
-                    item_name = f"{range_name}[{index}]"
-                if isinstance(excel_value, list):
-                    excel_item = excel_value[index]
-                else:
-                    excel_item = excel_value
-
-                difference = report_difference(excel_item, json_item)
-                if isinstance(difference, float) and abs(difference) < min_diff:
-                    continue
-                print_columns(
-                    column_widths, [item_name, excel_item, json_item, difference]
-                )
-        else:
-            difference = report_difference(excel_value, json_value)
-            if isinstance(difference, float) and abs(difference) < min_diff:
-                continue
-            print_columns(
-                column_widths, [range_name, excel_value, json_value, difference]
-            )
-
-
-def write_named_ranges(
-    exiting_values: dict,
-    new_values: dict,
-    workbook: xw.main.Book,
-    source_str: str,
-    backup: bool = False,
-) -> None:
-    """Update named ranges in a workbook from a dictionary."""
-
-    preview_named_range_update(exiting_values, new_values)
-
-    print("The values listed above will be overwritten.")
-    # TODO: Add argument to function to skip confirmation
-    print("Enter 'y' to continue: ", end="")
-    overwrite_confirm: str = input()
-    if overwrite_confirm == "y":
-        if backup:
-            backup_path: Path = backup_workbook(workbook)
-            logger.debug(f"Backed up to {backup_path}")
-        logger.debug(
-            f"Updating named ranges.\n\
-            Source: {source_str}\n\
-            Target: {workbook.fullname}"
-        )
-        for range in new_values.keys():
-            write_named_range(workbook, range, new_values[range])
-    else:
-        print("Aborted.")
-
-
-def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
-    """Check that a dictionary has the required keys.
-
-    Ensure keys are not empty lists. Warn if keys not found."""
-    for key in keys_to_check:
-        if key not in target_dict.keys():
-            logger.warning(f'Key "{key}" not found.')
-            return False
-        if isinstance(target_dict[key], (list, dict)) and len(target_dict[key]) == 0:
-            logger.warning(f'Key "{key}" has no entires.')
-            return False
-
-    return True
-
+########################
+#### CORE FUNCTIONS ####
+########################
 
 # TODO: Consider refactor of funciton name
 def get_json_measurement_names(json_file: str) -> Optional[dict]:
@@ -352,21 +261,92 @@ def get_json_measurement_names(json_file: str) -> Optional[dict]:
     return json_named_measurements
 
 
-def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
-    # make a dict of named ranges, measurement names, and measurement types
-    workbook_named_ranges = dict()
-    if len(workbook.names) == 0:
-        logger.error(f"workbook{workbook.name} has no named ranges.")
-        return None
-    for named_range in workbook.names:
-        # Sometimes Excel puts in hidden names that start
-        # with _xlfn. -- skip these
-        if named_range.name.startswith("_xlfn."):
-            continue
-        range_value = read_named_range(workbook, named_range.name)
-        workbook_named_ranges[named_range.name] = range_value
+def preview_named_range_update(
+    existing_values: dict, new_values: dict, decimals: int = 3, min_diff: float = 0.001
+) -> None:
+    """Print out list of values that will be overwritten."""
+    column_widths = [36, 17, 17, 17]
+    column_headings = ["PARAMETER", "OLD VALUE", "NEW VALUE", "PERCENT CHANGE"]
+    underlines = ["-" * 20, "-" * 12, "-" * 12, "-" * 15]
+    print()  # newline
+    print_columns(column_widths, column_headings)
+    print_columns(column_widths, underlines)
 
-    return workbook_named_ranges
+    for range_name in new_values.keys():
+        json_value = new_values[range_name]
+        excel_value = existing_values[range_name]
+        if isinstance(json_value, (list, dict)):
+            for index, json_item in enumerate(json_value):
+                if isinstance(json_value, dict):
+                    item_name = f"{range_name}[{json_item}]"
+                    json_item = json_value[json_item]
+                else:
+                    item_name = f"{range_name}[{index}]"
+                if isinstance(excel_value, list):
+                    excel_item = excel_value[index]
+                else:
+                    excel_item = excel_value
+
+                difference = report_difference(excel_item, json_item)
+                if isinstance(difference, float) and abs(difference) < min_diff:
+                    continue
+                print_columns(
+                    column_widths, [item_name, excel_item, json_item, difference]
+                )
+        else:
+            difference = report_difference(excel_value, json_value)
+            if isinstance(difference, float) and abs(difference) < min_diff:
+                continue
+            print_columns(
+                column_widths, [range_name, excel_value, json_value, difference]
+            )
+
+
+def print_columns(
+    widths: list, values: list, decimals: int = 3, na_string: str = "-"
+) -> None:
+    if len(widths) != len(values):
+        raise IndexError("Mismatch of columns & values.")
+    if any([not isinstance(item, int) for item in widths]):
+        raise TypeError("Column widths must be integers")
+    alignments = ["<", ">", ">", ">"]  # align left for first column
+    for column, value in enumerate(values):
+        if isinstance(value, float):
+            print(
+                "{val:{al}{wid}.{prec}}".format(
+                    val=value, al=alignments[column], wid=widths[column], prec=decimals
+                ),
+                end="",
+            )
+        elif isinstance(value, str):
+            # truncate extra long strings
+            if len(value) > widths[column]:
+                num_chars = int(widths[column] / 2) - 3
+                value = value[:num_chars] + "..." + value[-num_chars:]
+            print(
+                "{val:{al}{wid}}".format(
+                    val=value, al=alignments[column], wid=widths[column]
+                ),
+                end="",
+            )
+        elif isinstance(value, datetime.datetime):
+            datestr = value.strftime("%Y-%m-%d")
+            print(
+                "{val:{al}{wid}}".format(val=datestr, al=">", wid=widths[column]),
+                end="",
+            )
+        elif isinstance(value, datetime.timedelta):
+            date_delta = f"{value.days} days"
+            print(
+                "{val:{al}{wid}}".format(val=date_delta, al=">", wid=widths[column]),
+                end="",
+            )
+        elif value is None:
+            print(
+                "{val:{al}{wid}}".format(val=na_string, al="^", wid=widths[column]),
+                end="",
+            )
+    print()  # newline
 
 
 def update_named_ranges(
@@ -417,3 +397,33 @@ def update_named_ranges(
     )
 
     return range_undo_buffer
+
+
+def write_named_ranges(
+    exiting_values: dict,
+    new_values: dict,
+    workbook: xw.main.Book,
+    source_str: str,
+    backup: bool = False,
+) -> None:
+    """Update named ranges in a workbook from a dictionary."""
+
+    preview_named_range_update(exiting_values, new_values)
+
+    print("The values listed above will be overwritten.")
+    # TODO: Add argument to function to skip confirmation
+    print("Enter 'y' to continue: ", end="")
+    overwrite_confirm: str = input()
+    if overwrite_confirm == "y":
+        if backup:
+            backup_path: Path = backup_workbook(workbook)
+            logger.debug(f"Backed up to {backup_path}")
+        logger.debug(
+            f"Updating named ranges.\n\
+            Source: {source_str}\n\
+            Target: {workbook.fullname}"
+        )
+        for range in new_values.keys():
+            write_named_range(workbook, range, new_values[range])
+    else:
+        print("Aborted.")
