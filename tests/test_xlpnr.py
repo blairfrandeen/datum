@@ -148,12 +148,12 @@ class TestXL(unittest.TestCase):
         # isn't needed. Close it prior to tests
         self.app.books[0].close()
 
-    def test_get_workbook_range_names(self):
-        valid_workbook = xlpnr.get_workbook_range_names(self.workbook)
+    def test_get_workbook_kvp(self):
+        valid_workbook = xlpnr.get_workbook_key_value_pairs(self.workbook)
         self.assertIsInstance(valid_workbook, dict)
 
         blank_wb = self.app.books.add()
-        empty_wb = xlpnr.get_workbook_range_names(blank_wb)
+        empty_wb = xlpnr.get_workbook_key_value_pairs(blank_wb)
         self.assertIsNone(empty_wb)
         blank_wb.close()
 

@@ -53,7 +53,9 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     return backup_path
 
 
-def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
+def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
+    """Find all named ranges in a workbook and return
+    a dictionary of name-value pairs."""
     if len(workbook.names) == 0:
         logger.error(f"workbook{workbook.name} has no named ranges.")
         return None
@@ -331,7 +333,7 @@ def update_named_ranges(
     """
     # Assume target is open excel worksheet
     # TODO: Implement ability to take .xlsx file path as argument
-    target_data: Optional[dict] = get_workbook_range_names(target)
+    target_data: Optional[dict] = get_workbook_key_value_pairs(target)
     if not target_data:
         print("No named ranges in Excel file.")
         return None
