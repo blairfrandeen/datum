@@ -26,24 +26,24 @@ class ConsoleSession:
             except FileNotFoundError:
                 print(f"Directory not found.")
 
-    def load_measurement(self) -> None:
+    def load_measurement(self, *args) -> None:
         """Load measurement data from a JSON file"""
         self.json_file = user_select_json_file()
 
-    def load_workbook(self) -> None:
+    def load_workbook(self, *args) -> None:
         """Select an open Excel workbook to write to"""
         self.excel_workbook = user_select_open_workbook()
 
-    def pwd(self) -> None:
+    def pwd(self, *args) -> None:
         """Display current working directory. Wrapper for os.getcwd()"""
         print(os.getcwd())
 
-    def status(self) -> None:
+    def status(self, *args) -> None:
         """Display loaded measurement & loaded workbook"""
         print(f"Loaded Measurement:\t{self.json_file}")
         print(f"Loaded Workbook:\t{self.excel_workbook}")
 
-    def undo_last_update(self) -> None:
+    def undo_last_update(self, *args) -> None:
         if self.undo_buffer:
             self.undo_buffer = update_named_ranges(
                 self.undo_buffer, self.excel_workbook, backup=False
@@ -51,7 +51,7 @@ class ConsoleSession:
         else:
             print("No undo history available.")
 
-    def update_named_ranges(self, backup: bool = False) -> None:
+    def update_named_ranges(self, *args, backup: bool = False) -> None:
         """Update named ranges in the Excel file with matching
         data from the JSON measurement file"""
         if not self.json_file:

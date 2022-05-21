@@ -36,6 +36,11 @@ class TestConsoleSession:
         captured = capsys.readouterr()
         assert "Directory not found" in captured.out
 
+        # cd with wrong argument type:
+        for wrong_arg in [5, 3.2, (1,2,'three'), [1,2,3]]:
+            with pytest.raises(TypeError):
+                console_test_session.chdir(wrong_arg)
+
         # cd to temporary directory directory
         os.makedirs("./temp_test")
         console_test_session.chdir('temp_test')
