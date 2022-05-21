@@ -176,7 +176,7 @@ def report_difference(
 ########################
 
 # TODO: Consider refactor of funciton name
-def get_json_measurement_names(json_file: str) -> Optional[dict]:
+def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
     """Load JSON measurement dict from a JSON file."""
     try:
         with open(json_file, "r") as json_file_handle:
@@ -340,7 +340,7 @@ def update_named_ranges(
 
     # Check if source is json file
     if isinstance(source, str) and source.lower().endswith(".json"):
-        source_data: Optional[dict] = get_json_measurement_names(source)
+        source_data: Optional[dict] = get_json_key_value_pairs(source)
         # TODO: Unit Test
         if not source_data:
             print("No measurement data found in JSON file.")

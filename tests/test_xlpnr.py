@@ -16,20 +16,20 @@ JSON_WITHOUT_USEFUL_DATA = "tests/json/useless.json"
 TEST_EXCEL_WB = "tests/xl/datum_excel_tests.xlsx"
 
 
-def test_get_json_measurement_names():
-    valid_names = xlpnr.get_json_measurement_names(TEST_JSON_FILE)
+def test_get_json_key_value_pairs():
+    valid_names = xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)
     assert isinstance(valid_names, dict)
 
-    no_names = xlpnr.get_json_measurement_names(JSON_WITHOUT_USEFUL_DATA)
+    no_names = xlpnr.get_json_key_value_pairs(JSON_WITHOUT_USEFUL_DATA)
     assert no_names is None
 
-    non_existant_json = xlpnr.get_json_measurement_names("DNE.json")
+    non_existant_json = xlpnr.get_json_key_value_pairs("DNE.json")
     assert non_existant_json is None
 
-    broken_json = xlpnr.get_json_measurement_names("tests/json/broken.json")
+    broken_json = xlpnr.get_json_key_value_pairs("tests/json/broken.json")
     assert broken_json is None
 
-    no_measurements = xlpnr.get_json_measurement_names(
+    no_measurements = xlpnr.get_json_key_value_pairs(
         "tests/json/no_measurements.json"
     )
     assert no_measurements is None
