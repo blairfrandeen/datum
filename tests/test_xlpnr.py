@@ -18,7 +18,7 @@ TEST_EXCEL_WB = "tests/xl/datum_excel_tests.xlsx"
 
 def test_get_json_measurement_names():
     valid_names = xlpnr.get_json_measurement_names(TEST_JSON_FILE)
-    assert isinstance (valid_names, dict)
+    assert isinstance(valid_names, dict)
 
     no_names = xlpnr.get_json_measurement_names(JSON_WITHOUT_USEFUL_DATA)
     assert no_names is None
@@ -118,7 +118,7 @@ class TestUtilities(unittest.TestCase):
             xlpnr.print_columns(column_widths, too_many_values)
 
         with pytest.raises(TypeError):
-            xlpnr.print_columns(['1', 2, 3.4, 'five'], floats)
+            xlpnr.print_columns(["1", 2, 3.4, "five"], floats)
         assert 1
 
     def test_flattened_list(self):
@@ -167,9 +167,15 @@ class TestXL(unittest.TestCase):
 
     def test_write_named_range(self):
         testvalue = 700_000
-        assert xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue) == testvalue
+        assert (
+            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue)
+            == testvalue
+        )
 
-        assert xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", testvalue) is None
+        assert (
+            xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", testvalue)
+            is None
+        )
 
         illegal_dict = {"kivo": "stinker", "layla": "earflops"}
         self.assertIsNone(
@@ -184,7 +190,9 @@ class TestXL(unittest.TestCase):
         )
 
     def test_write_empty_range(self):
-        assert xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None) is None
+        assert (
+            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None) is None
+        )
 
     def test_read_named_range(self):
         test_ranges = {
@@ -240,7 +248,9 @@ class TestXL(unittest.TestCase):
 
         # confirm overwrite automatically
         with patch("builtins.input", return_value="y"):
-            range_undo_buffer = xlpnr.update_named_ranges(self.json_file, self.workbook, backup=False)
+            range_undo_buffer = xlpnr.update_named_ranges(
+                self.json_file, self.workbook, backup=False
+            )
             assert range_undo_buffer["DIPSTICK.angle"] == 95
             assert range_undo_buffer["GEARS.mass"] == 45
 
@@ -251,7 +261,6 @@ class TestXL(unittest.TestCase):
         assert (
             xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None
         )
-        
 
     def test_backup(self):
         backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")

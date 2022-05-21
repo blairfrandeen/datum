@@ -1,13 +1,13 @@
 import os
-import sys
-from typing import List, NamedTuple, Optional, Union, Callable, Tuple, NoReturn
 from collections import namedtuple
+from typing import List, NamedTuple, Optional, Union
 
 import xlwings as xw
 # TODO: Make this work for both pytest & when trying to actually run the console
 from xl_populate_named_ranges import logger, update_named_ranges
 
 Command: NamedTuple = namedtuple("Command", "id function")
+
 
 class ConsoleSession:
     def __init__(self) -> None:
@@ -24,7 +24,7 @@ class ConsoleSession:
                 os.chdir(args[0])
                 print(f"Changed dir to {os.getcwd()}")
             except FileNotFoundError:
-                print(f"Directory not found.")
+                print("Directory not found.")
 
     def load_measurement(self, *args) -> None:
         """Load measurement data from a JSON file"""
@@ -68,9 +68,8 @@ class ConsoleSession:
 
 
 def user_select_item(
-    item_list: List[str],
-    item_type: str = "choice",
-    test_flag: bool = False) -> Optional[int]:
+    item_list: List[str], item_type: str = "choice", test_flag: bool = False
+) -> Optional[int]:
     """Given a list of files or workbooks, enumerate them and
     ask the user to select one item.
 
@@ -86,18 +85,22 @@ def user_select_item(
 
     # keep asking for input until a valid input or quit command received
     while True:
-        selection_index: Union[str, int] = input(f"Select {item_type} index (q to quit): ")
+        selection_index: Union[str, int] = input(
+            f"Select {item_type} index (q to quit): "
+        )
         if selection_index == "q":
             return None
         try:
             selection_index = int(selection_index)
         except ValueError:  # if selection is non-integer
             print("Invalid input.")
-            if test_flag: break
+            if test_flag:
+                break
         if isinstance(selection_index, int):
             if selection_index >= len(item_list) or selection_index < 0:
                 print("Index out of bounds.")
-                if test_flag: break
+                if test_flag:
+                    break
             else:
                 return selection_index
     return None
@@ -138,7 +141,7 @@ def user_select_json_file() -> Optional[str]:
     return json_file_path
 
 
-def console(command_list: list, test_flag: bool=False) -> None:
+def console(command_list: list, test_flag: bool = False) -> None:
     """
     Run a console within your python program.
     Some configuration options in JSON file.
@@ -183,7 +186,8 @@ def console(command_list: list, test_flag: bool=False) -> None:
             if not valid_command:
                 print("Unknown command. Type 'h' for help, 'q' to quit.")
 
-        if test_flag: break
+        if test_flag:
+            break
 
 
 def main() -> None:
@@ -203,8 +207,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     from __init__ import __version__, datum_url
-    print("="*40)
-    print(f'DATUM - Version {__version__}')
+
+    print("=" * 40)
+    print(f"DATUM - Version {__version__}")
     print(datum_url)
-    print("="*40)
+    print("=" * 40)
     main()
