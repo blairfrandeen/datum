@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -277,7 +278,48 @@ class TestXLPT():
             [None, None, None]
         ]
 
+    def test_backup(self):
+        backup_path = Path(TEST_EXCEL_WB.replace('.','_BACKUP.'))
+        if os.path.isfile(backup_path):
+            os.remove(backup_path)
+        backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
+        assert os.path.isfile(backup_wb)
+        assert backup_path == backup_wb
+        os.remove(backup_path)
 
+    def test_update_named_ranges(self, monkeypatch, capsys):
+        mock_source_dict = {
+            "k1": 12,
+            "k2": 3,
+            "k4": 5
+        }
+        def _mock_target_dict(arg):
+            return {
+                "k1": 15,
+                "k3": 9,
+                "k4": [1, 2, 3]
+            }
+
+        # Test for source dict as argument
+        monkeypatch.setattr(xlpnr, 'get_workbook_key_value_pairs',
+            _mock_target_dict)
+        monkeypatch.setattr(xlpnr, 'write_named_ranges', lambda *_: None)
+        unr_ret = xlpnr.update_named_ranges(mock_source_dict, self.workbook)
+        assert sorted(list(unr_ret.keys())) == ['k1', 'k4']
+        assert unr_ret['k1'] == 15
+
+        # Test for get_json_key_value_pairs to return None when given a string
+        monkeypatch.setattr(xlpnr, 'get_json_key_value_pairs', lambda _: None)
+        assert xlpnr.update_named_ranges(self.json_file, self.workbook) is None
+        captured = capsys.readouterr()
+        assert "No measurement data found in JSON file." in captured.out
+
+        # Test for get_workbook_key_value pairs returns none
+        monkeypatch.setattr(xlpnr, 'get_workbook_key_value_pairs', lambda _: None)
+        assert xlpnr.update_named_ranges(self.json_file, self.workbook) is None
+        captured = capsys.readouterr()
+        assert "No named ranges in Excel file." in captured.out
+        
 class TestXLUT(unittest.TestCase):
     def setUp(self):
         self._load_json_test()
@@ -352,30 +394,6 @@ class TestXLUT(unittest.TestCase):
         )
         self.assertIsNone(self.workbook.names[large_range].refers_to_range.value[2][0])
         # self.assertIsNone(xlpnr.read_named_range(self.workbook, large_range)[2][0])
-
-    def test_update(self):
-        xlpnr.write_named_range(self.workbook, "DIPSTICK.angle", 95)  # should be: 90
-        xlpnr.write_named_range(self.workbook, "GEARS.mass", 45)  # should be: 55.456
-
-        # confirm overwrite automatically
-        with patch("builtins.input", return_value="y"):
-            range_undo_buffer = xlpnr.update_named_ranges(
-                self.json_file, self.workbook, backup=False
-            )
-            assert range_undo_buffer["DIPSTICK.angle"] == 95
-            assert range_undo_buffer["GEARS.mass"] == 45
-
-        blank_wb = self.app.books.add()
-        assert xlpnr.update_named_ranges(self.json_file, blank_wb) is None
-        blank_wb.close()
-
-        assert (
-            xlpnr.update_named_ranges(JSON_WITHOUT_USEFUL_DATA, self.workbook) is None
-        )
-
-    def test_backup(self):
-        backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
-        assert os.path.isfile(backup_wb)
 
     def tearDown(self):
         """Close all open workbooks, and quit Excel."""
