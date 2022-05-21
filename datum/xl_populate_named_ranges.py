@@ -67,8 +67,8 @@ def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
         if "!#REF" in named_range.refers_to:
             logger.error(f"Name {named_range.name} has a #REF! error.")
             continue
-        range_value = named_range.refers_to_range.value
-        workbook_named_ranges[named_range.name] = range_value
+        workbook_named_ranges[named_range.name] =\
+            named_range.refers_to_range.value
 
     return workbook_named_ranges
 
@@ -85,9 +85,11 @@ def write_named_range(
     range_name -- string with range name
     new_value -- new value or list of values to write
     """
-    target_range: xw.main.Range = xw_get_named_range(workbook, range_name)
-    if target_range is None:
-        return None
+    if range_name not in workbook.names:
+        raise KeyError(f"Name {range_name} not in {workbook.name}")
+    if "!#REF" in workbook.names[range_name].refers_to:
+        raise TypeError(f"Name {range_name} has a #REF! error.")
+    target_range: xw.main.Range = workbook.names[range_name].refers_to_range
 
     if isinstance(new_value, list):
         # Flatten any arbitrary list
@@ -116,30 +118,6 @@ def write_named_range(
         logger.error(
             f"Cannot write value of type {type(new_value)} to range {range_name}"
         )
-        return None
-
-
-def xw_get_named_range(
-    workbook: xw.main.Book, range_name: str
-) -> Optional[xw.main.Range]:
-    """Find a named range in an open workbook.
-
-    Keyword arguments:
-    workbook -- xlwings Book object
-    range_name -- string with range name
-
-    Returns the range object if found,
-    returns None if not found"""
-    if range_name in workbook.names:
-        if "!#REF!" in workbook.names[range_name].refers_to:
-            logger.error(
-                f"Name {range_name} has a #REF! error. Please fix prior to continuing."
-            )
-            logger.error("Use the name manager to remove or fix any names with errors.")
-            return None
-        return workbook.names[range_name].refers_to_range
-    else:
-        logger.debug(f"Name {range_name} not found in {workbook}")
         return None
 
 

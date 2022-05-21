@@ -148,13 +148,6 @@ class TestXL(unittest.TestCase):
         # isn't needed. Close it prior to tests
         self.app.books[0].close()
 
-    def test_get_named_range(self):
-        self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "non-existant range"))
-        self.assertIsInstance(
-            xlpnr.xw_get_named_range(self.workbook, "DIPSTICK.angle"), xw.Range
-        )
-        self.assertIsNone(xlpnr.xw_get_named_range(self.workbook, "missing_ref"))
-
     def test_get_workbook_range_names(self):
         valid_workbook = xlpnr.get_workbook_range_names(self.workbook)
         self.assertIsInstance(valid_workbook, dict)
@@ -171,10 +164,10 @@ class TestXL(unittest.TestCase):
             == testvalue
         )
 
-        assert (
+        with pytest.raises(KeyError):
             xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", testvalue)
-            is None
-        )
+        with pytest.raises(TypeError):
+            xlpnr.write_named_range(self.workbook, "missing_ref", testvalue)
 
         illegal_dict = {"kivo": "stinker", "layla": "earflops"}
         self.assertIsNone(
@@ -192,27 +185,6 @@ class TestXL(unittest.TestCase):
         assert (
             xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None) is None
         )
-
-    # def test_read_named_range(self):
-    #     test_ranges = {
-    #         "Test_Int": 4,
-    #         "Test_Float": 3.141519,
-    #         "Test_Str": "Kivo is a dork",
-    #         "Test_Date": datetime.datetime(2022, 5, 1, 0, 0),
-    #         "Invalid_Range_Name": None,
-    #     }
-    #     for named_range in test_ranges.keys():
-    #         expected_value = test_ranges[named_range]
-    #         read_value = xlpnr.read_named_range(self.workbook, named_range)
-    #         self.assertEqual(read_value, expected_value)
-
-    # def test_read_named_vector_range(self):
-    #     horizontal_range = "AIR_NUT.point_1"
-    #     vertical_range = "HOUSING.moments_of_inertia_centroidal"
-    #     vertical_range_value = xlpnr.read_named_range(self.workbook, vertical_range)
-    #     horizontal_range_value = xlpnr.read_named_range(self.workbook, horizontal_range)
-    #     self.assertIsInstance(vertical_range_value, list)
-    #     self.assertIsInstance(horizontal_range_value, list)
 
     def test_write_named_vector_range(self):
         horizontal_range = "AIR_NUT.point_1"
