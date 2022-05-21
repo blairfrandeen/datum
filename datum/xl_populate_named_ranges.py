@@ -65,6 +65,7 @@ def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
         # Sometimes Excel puts in hidden names that start
         # with _xlfn. -- skip these
         if named_range.name.startswith("_xlfn."):
+            logger.debug(f"Skipping range {named_range.name}")
             continue
         if "!#REF" in named_range.refers_to:
             logger.error(f"Name {named_range.name} has a #REF! error.")

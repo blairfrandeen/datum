@@ -194,6 +194,26 @@ class TestUtilities():
         assert list(xlpnr.flatten_list(list_2d)) == list_1d + list_1d
         assert list(xlpnr.flatten_list(list_mixed)) == list_1d + list_1d
 
+class MockXLName():
+    def __init__(self, name):
+        self.name = name
+        self.refers_to = 'none'
+        self.refers_to_range = MockXLRange(name, 5)
+
+class MockXLRange():
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+class MockWorkbook():
+    def __init__(self, name, names):
+        self.name = name
+        self.names = [MockXLName(n) for n in names]
+
+def test_get_workbook_kvp(caplog):
+    mockwb = MockWorkbook('mock', ['_xlfn.mockfun', 'test'])
+    assert '_xlfn.mockfun' not in xlpnr.get_workbook_key_value_pairs(mockwb)
+    assert 'Skipping range _xlfn.mockfun' in caplog.text
 
 class TestXL(unittest.TestCase):
     def setUp(self):
@@ -217,6 +237,10 @@ class TestXL(unittest.TestCase):
     def test_get_workbook_kvp(self):
         valid_workbook = xlpnr.get_workbook_key_value_pairs(self.workbook)
         self.assertIsInstance(valid_workbook, dict)
+
+        # mockwb = MockWorkbook('mock', ['_xlfn.mockfun', 'test'])
+        # assert '_xlfn.mockfun' not in xlpnr.get_workbook_key_value_pairs(mockwb)
+        # assert 'Skipping range _xlfn.mockfun' in caplog.text
 
         blank_wb = self.app.books.add()
         empty_wb = xlpnr.get_workbook_key_value_pairs(blank_wb)
