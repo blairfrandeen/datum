@@ -190,11 +190,11 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
         logger.error(f"JSON file {json_file} is corrupt.")
         return None
 
-    json_named_measurements: dict = dict()
     if not check_dict_keys(json_data, ["measurements"]):
         logger.warning(f'No "measurement" field in {json_file}')
         return None
 
+    json_named_measurements: dict = dict()
     for measurement in json_data["measurements"]:
         if not check_dict_keys(measurement, ["name", "expressions"]):
             logger.warning(f"{measurement} is missing name and/or expressions")
@@ -220,8 +220,8 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
             elif expr["type"] == "List":
                 json_named_measurements[range_name] = expr["value"]
                 for index in range(3):
-                    range_name = f"{range_name}.{index}"
-                    json_named_measurements[range_name] = expr["value"][index]
+                    range_index = f"{range_name}.{index}"
+                    json_named_measurements[range_index] = expr["value"][index]
             else:
                 json_named_measurements[range_name] = expr["value"]
 
