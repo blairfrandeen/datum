@@ -55,14 +55,18 @@ class TestConsoleSession:
         os.rmdir("./temp_test")
 
     def test_load_measurement(self, monkeypatch, console_test_session):
-        monkeypatch.setattr("builtins.input", lambda _: "q")
+        def _mock_select_json():
+            return 'select_json'
+        monkeypatch.setattr(dc, "user_select_json_file", _mock_select_json)
         console_test_session.load_measurement()
-        assert console_test_session.json_file is None
+        assert console_test_session.json_file == 'select_json'
 
     def test_load_workbook(self, monkeypatch, console_test_session):
-        monkeypatch.setattr("builtins.input", lambda _: "q")
+        def _mock_select_wb():
+            return 'select_wb'
+        monkeypatch.setattr(dc, "user_select_open_workbook", _mock_select_wb)
         console_test_session.load_workbook()
-        assert console_test_session.excel_workbook is None
+        assert console_test_session.excel_workbook == 'select_wb'
 
     def test_pwd(self, capsys, console_test_session):
         console_test_session.pwd()
@@ -74,10 +78,21 @@ class TestConsoleSession:
         captured = capsys.readouterr()
         assert "Loaded Measurement:" in captured.out
 
+    def test_undo(self, console_test_session, monkeypatch, capsys):
+        def _mock_xlpnr_update(arg1, arg2, backup=False):
+            return {"update_success": True}
+
+        monkeypatch.setattr(dc, "update_named_ranges", _mock_xlpnr_update)
+        cts = console_test_session
+        cts.undo_last_update()
+        captured = capsys.readouterr()
+        assert "No undo history available." in captured.out
+        cts.undo_buffer = {"update_success": False}
+        cts.undo_last_update()
+        assert cts.undo_buffer["update_success"] is True
+
     def test_update_named_ranges(self, console_test_session, monkeypatch):
         cts = console_test_session
-        # cts.json_file = None
-        # cts.excel_workbook = None
         def _mock_select_json():
             cts.json_file = "json_file"
 
@@ -98,29 +113,15 @@ class TestConsoleSession:
         assert cts.excel_workbook == "excel_workbook"
         assert cts.undo_buffer["update_success"] is True
 
-    def test_undo(self, console_test_session, monkeypatch, capsys):
-        def _mock_xlpnr_update(arg1, arg2, backup=False):
-            return {"update_success": True}
-
-        monkeypatch.setattr(dc, "update_named_ranges", _mock_xlpnr_update)
-        cts = console_test_session
-        cts.undo_last_update()
-        captured = capsys.readouterr()
-        assert "No undo history available." in captured.out
-        cts.undo_buffer = {"update_success": False}
-        cts.undo_last_update()
-        assert cts.undo_buffer["update_success"] is True
-
 
 def test_console(monkeypatch, capsys, console_command_list):
+    # verify bad commands are handled
     bad_commands = ["5", "gettrdun"]
     for cmd in bad_commands:
         monkeypatch.setattr("builtins.input", lambda _: cmd)
         dc.console(console_command_list, test_flag=True)
         captured = capsys.readouterr()
         assert "Unknown command." in captured.out
-        # with pytest.raises(SystemExit):
-        #     monkeypatch.setattr('builtins.input', lambda _: 'q')
 
     # verify help command is called
     for help_cmd in ["h", "help"]:
@@ -132,20 +133,23 @@ def test_console(monkeypatch, capsys, console_command_list):
     # Verify no response for empty input
     monkeypatch.setattr("builtins.input", lambda _: "")
     assert dc.console(console_command_list, test_flag=True) is None
-    # captured = capsys.readouterr()
-    # assert "Available commands" in captured.out
 
 
 def test_user_select_item(monkeypatch, capsys):
+    # test empty list returns None
     empty_list = []
     assert dc.user_select_item(empty_list, "nothing") is None
-    valid_list = ["muffins", "cupcakes", "cookies", "more cookies"]
 
+    # valid list of optoins
+    valid_list = ["muffins", "cupcakes", "cookies", "more cookies"]
+    
+    # test that string input is invalid
     monkeypatch.setattr("builtins.input", lambda _: "some string")
     dc.user_select_item(valid_list, "treats", test_flag=True)
     captured = capsys.readouterr()
     assert "Invalid input." in captured.out
 
+    # test idnex out of bounds
     bad_indices = [-1, 434]
     for cmd in bad_indices:
         monkeypatch.setattr("builtins.input", lambda _: cmd)
@@ -153,11 +157,13 @@ def test_user_select_item(monkeypatch, capsys):
         captured = capsys.readouterr()
         assert "Index out of bounds." in captured.out
 
+    # test valid choices
     good_choices = list(range(4))
     for choice in good_choices:
         monkeypatch.setattr("builtins.input", lambda _: choice)
         assert dc.user_select_item(valid_list, "treats", test_flag=True) == choice
 
+    # test quit command
     monkeypatch.setattr("builtins.input", lambda _: "q")
     assert dc.user_select_item(valid_list, "treats", test_flag=True) is None
 
