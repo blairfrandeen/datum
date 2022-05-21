@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import List, NamedTuple, Optional, Union, Callable, Tuple, NoReturn
 from collections import namedtuple
 
@@ -14,6 +15,17 @@ class ConsoleSession:
         self.excel_workbook: Optional[str] = None
         self.undo_buffer: Optional[dict] = None
 
+    def chdir(self, *args) -> None:
+        """Change directory. Wrapper for os.chdir() with error handling"""
+        if len(args) < 1:
+            print("Change directory: cd <directory>")
+        else:
+            try:
+                os.chdir(args[0])
+                print(f"Changed dir to {os.getcwd()}")
+            except FileNotFoundError:
+                print(f"Directory not found.")
+
     def load_measurement(self) -> None:
         """Load measurement data from a JSON file"""
         self.json_file = user_select_json_file()
@@ -21,6 +33,23 @@ class ConsoleSession:
     def load_workbook(self) -> None:
         """Select an open Excel workbook to write to"""
         self.excel_workbook = user_select_open_workbook()
+
+    def pwd(self) -> None:
+        """Display current working directory. Wrapper for os.getcwd()"""
+        print(os.getcwd())
+
+    def status(self) -> None:
+        """Display loaded measurement & loaded workbook"""
+        print(f"Loaded Measurement:\t{self.json_file}")
+        print(f"Loaded Workbook:\t{self.excel_workbook}")
+
+    def undo_last_update(self) -> None:
+        if self.undo_buffer:
+            self.undo_buffer = update_named_ranges(
+                self.undo_buffer, self.excel_workbook, backup=False
+            )
+        else:
+            print("No undo history available.")
 
     def update_named_ranges(self, backup: bool = False) -> None:
         """Update named ranges in the Excel file with matching
@@ -36,34 +65,6 @@ class ConsoleSession:
             # Do not clear undo buffer to None on abort
             if undo_buffer:
                 self.undo_buffer = undo_buffer
-
-    def undo_last_update(self) -> None:
-        if self.undo_buffer:
-            self.undo_buffer = update_named_ranges(
-                self.undo_buffer, self.excel_workbook, backup=False
-            )
-        else:
-            print("No undo history available.")
-
-    def status(self) -> None:
-        """Display loaded measurement & loaded workbook"""
-        print(f"Loaded Measurement:\t{self.json_file}")
-        print(f"Loaded Workbook:\t{self.excel_workbook}")
-
-    def pwd(self) -> None:
-        """Display current working directory. Wrapper for os.getcwd()"""
-        print(os.getcwd())
-
-    def chdir(self, *args) -> None:
-        """Change directory. Wrapper for os.chdir() with error handling"""
-        if len(args) < 1:
-            print("Change directory: cd <directory>")
-        else:
-            try:
-                os.chdir(args[0])
-                print(f"Changed dir to {os.getcwd()}")
-            except FileNotFoundError:
-                print(f"Directory not found.")
 
 
 def user_select_item(
@@ -186,8 +187,6 @@ def console(command_list: list, test_flag: bool=False) -> None:
 
 
 def main() -> None:
-    # if len(sys.argv) > 1 and sys.argv[1] == "--test":
-    #     os.chdir("tests")
     cs: ConsoleSession = ConsoleSession()
     # TODO: Add backup command
     command_list: list = [
