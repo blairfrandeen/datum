@@ -197,7 +197,7 @@ class TestUtilities():
 class MockXLName():
     def __init__(self, name):
         self.name = name
-        self.refers_to = 'none'
+        self.refers_to = 'Sheet 1 A1 or something'
         self.refers_to_range = MockXLRange(name, 5)
 
 class MockXLRange():
@@ -210,12 +210,75 @@ class MockWorkbook():
         self.name = name
         self.names = [MockXLName(n) for n in names]
 
-def test_get_workbook_kvp(caplog):
-    mockwb = MockWorkbook('mock', ['_xlfn.mockfun', 'test'])
-    assert '_xlfn.mockfun' not in xlpnr.get_workbook_key_value_pairs(mockwb)
-    assert 'Skipping range _xlfn.mockfun' in caplog.text
+class TestXLPT():
+    @classmethod
+    def setup_class(cls):
+        cls._load_json_test(cls)
+        cls._load_excel_test(cls)
 
-class TestXL(unittest.TestCase):
+    @classmethod
+    def teardown_class(cls):
+        """Close all open workbooks, and quit Excel."""
+        for book in cls.app.books:
+            book.close()
+        cls.app.quit()
+
+    def _load_json_test(self):
+        self.json_file = TEST_JSON_FILE
+
+    def _load_excel_test(self):
+        """Open an invisible Excel workbook to execute tests."""
+        # visible=False tag will run tests in background
+        # without opening Excel window
+        self.app = xw.App(visible=False)
+        self.workbook = self.app.books.open(TEST_EXCEL_WB)
+
+        # starting self.app will open a blank workbook that
+        # isn't needed. Close it prior to tests
+        self.app.books[0].close()
+
+    def test_get_workbook_kvp(self, caplog):
+        # test empty workbook with no names
+        blank_wb = self.app.books.add()
+        assert xlpnr.get_workbook_key_value_pairs(blank_wb) is None
+        blank_wb.close()
+
+        # test mockworkbook to ensure no _xlfn functions included
+        mockwb = MockWorkbook('mock', ['_xlfn.mockfun', 'test'])
+        assert '_xlfn.mockfun' not in xlpnr.get_workbook_key_value_pairs(mockwb)
+        assert 'Skipping range _xlfn.mockfun' in caplog.text
+
+        # add a name with a !#REF error to mock wb, verify it's skipped
+        mock_ref_rng = MockXLName('bad_ref')
+        mock_ref_rng.refers_to = "!#REF"
+        del mock_ref_rng.refers_to_range
+        mockwb.names.append(mock_ref_rng)
+
+        xlpnr.get_workbook_key_value_pairs(mockwb)
+        assert '#REF! error' in caplog.text
+
+        valid_workbook = xlpnr.get_workbook_key_value_pairs(self.workbook)
+        assert valid_workbook['Test_Int'] == 4
+        assert valid_workbook['Test_Str'] == 'Kivo is a dork'
+        assert valid_workbook['Test_Float'] == 3.141519
+        assert valid_workbook['Test_Date'] == datetime.datetime(2022,5,1)
+        assert valid_workbook['Empty_Range'] is None
+        assert valid_workbook['Test_List'] == [1, 2, 3]
+        assert valid_workbook['Test_Vector'] == [1, 2, 3]
+        assert valid_workbook['Test_Empty_List'] == [None, None, None]
+        assert valid_workbook['Test_Matrix'] == [
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]
+        ]
+        assert valid_workbook['Test_Empty_Matrix'] == [
+            [None, None, None],
+            [None, None, None],
+            [None, None, None]
+        ]
+
+
+class TestXLUT(unittest.TestCase):
     def setUp(self):
         self._load_json_test()
         self._load_excel_test()
@@ -233,19 +296,6 @@ class TestXL(unittest.TestCase):
         # starting self.app will open a blank workbook that
         # isn't needed. Close it prior to tests
         self.app.books[0].close()
-
-    def test_get_workbook_kvp(self):
-        valid_workbook = xlpnr.get_workbook_key_value_pairs(self.workbook)
-        self.assertIsInstance(valid_workbook, dict)
-
-        # mockwb = MockWorkbook('mock', ['_xlfn.mockfun', 'test'])
-        # assert '_xlfn.mockfun' not in xlpnr.get_workbook_key_value_pairs(mockwb)
-        # assert 'Skipping range _xlfn.mockfun' in caplog.text
-
-        blank_wb = self.app.books.add()
-        empty_wb = xlpnr.get_workbook_key_value_pairs(blank_wb)
-        self.assertIsNone(empty_wb)
-        blank_wb.close()
 
     def test_write_named_range(self):
         testvalue = 700_000
