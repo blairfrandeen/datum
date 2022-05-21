@@ -312,9 +312,13 @@ def print_columns(
     alignments = ["<", ">", ">", ">"]  # align left for first column
     for column, value in enumerate(values):
         if isinstance(value, float):
+            # use percentage on last column
+            if column == 3:
+                fspec = '%'
+            else: fspec = 'g'
             print(
-                "{val:{al}{wid}.{prec}}".format(
-                    val=value, al=alignments[column], wid=widths[column], prec=decimals
+                "{val:{al}{wid}.{prec}{fspec}}".format(
+                    val=value, al=alignments[column], wid=widths[column], prec=decimals, fspec=fspec
                 ),
                 end="",
             )
