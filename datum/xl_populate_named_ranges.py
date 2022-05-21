@@ -54,36 +54,23 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
 
 
 def get_workbook_range_names(workbook: xw.main.Book) -> Optional[dict]:
-    # make a dict of named ranges, measurement names, and measurement types
-    workbook_named_ranges = dict()
     if len(workbook.names) == 0:
         logger.error(f"workbook{workbook.name} has no named ranges.")
         return None
+    # make a dict of named ranges, measurement names, and measurement types
+    workbook_named_ranges = dict()
     for named_range in workbook.names:
         # Sometimes Excel puts in hidden names that start
         # with _xlfn. -- skip these
         if named_range.name.startswith("_xlfn."):
             continue
-        range_value = read_named_range(workbook, named_range.name)
+        if "!#REF" in named_range.refers_to:
+            logger.error(f"Name {named_range.name} has a #REF! error.")
+            continue
+        range_value = named_range.refers_to_range.value
         workbook_named_ranges[named_range.name] = range_value
 
     return workbook_named_ranges
-
-
-def read_named_range(
-    workbook: xw.main.Book, range_name: str
-) -> Optional[Union[str, int, float, list]]:
-    """Read a value from a named range in the workbook.
-
-    Keyword arguments:
-    workbook -- xlwings Book object
-    range_name -- string with range name"""
-    # TODO: Make this work with ranges of more than one cell
-    rng: Optional[xw.main.Range] = xw_get_named_range(workbook, range_name)
-    if rng is None:
-        return None
-
-    return rng.value
 
 
 def write_named_range(
@@ -150,8 +137,7 @@ def xw_get_named_range(
             )
             logger.error("Use the name manager to remove or fix any names with errors.")
             return None
-        rng: xw.main.Range = workbook.names[range_name].refers_to_range
-        return rng
+        return workbook.names[range_name].refers_to_range
     else:
         logger.debug(f"Name {range_name} not found in {workbook}")
         return None
