@@ -130,6 +130,9 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
     """Check that a dictionary has the required keys.
 
     Ensure keys are not empty lists. Warn if keys not found."""
+    if not isinstance(target_dict, dict):
+        logger.warning('Not a dictionary.')
+        return False
     for key in keys_to_check:
         if key not in target_dict.keys():
             logger.warning(f'Key "{key}" not found.')
@@ -175,7 +178,6 @@ def report_difference(
 #### CORE FUNCTIONS ####
 ########################
 
-# TODO: Consider refactor of funciton name
 def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
     """Load JSON measurement dict from a JSON file."""
     try:
@@ -194,18 +196,17 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
         return None
 
     for measurement in json_data["measurements"]:
-        # TODO: Verify that each measurement has at least a name
-        # and an expression with a value
         if not check_dict_keys(measurement, ["name", "expressions"]):
+            logger.warning(f"{measurement} is missing name and/or expressions")
             continue
 
         # replace spaces with underscores - no spaces allowed in excel range names
         measurement_name: str = measurement["name"].replace(" ", "_")
         for expr in measurement["expressions"]:
             if not check_dict_keys(expr, ["name", "type", "value"]):
+                logger.warning(f"missing name/type/value fields in {expr}")
                 continue
-            expression_name: str = expr["name"]
-            range_name: str = f"{measurement_name}.{expression_name}"
+            range_name: str = f"{measurement_name}.{expr['name']}"
             if expr["type"] == "Point" or expr["type"] == "Vector":
                 vector: List[float] = []
                 for coordinate in ["x", "y", "z"]:

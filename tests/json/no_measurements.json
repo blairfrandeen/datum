@@ -1,2 +1,4 @@
-{ "measurements": [] }
-{ "dogs": ["kivo", "layla"]}
+[
+    { "measurements": [] },
+    { "dogs": ["kivo", "layla"]}
+]

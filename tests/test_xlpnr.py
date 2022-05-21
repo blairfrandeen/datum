@@ -16,25 +16,71 @@ JSON_WITHOUT_USEFUL_DATA = "tests/json/useless.json"
 TEST_EXCEL_WB = "tests/xl/datum_excel_tests.xlsx"
 
 
-def test_get_json_key_value_pairs():
-    valid_names = xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)
-    assert isinstance(valid_names, dict)
+class TestJson():
+    def test_get_json_key_value_pairs(self, caplog, monkeypatch):
+        # test JSON file that doesn't exist
+        non_existant_json = xlpnr.get_json_key_value_pairs("DNE.json")
+        assert "Unable to open" in caplog.text
+        assert non_existant_json is None
 
-    no_names = xlpnr.get_json_key_value_pairs(JSON_WITHOUT_USEFUL_DATA)
-    assert no_names is None
+        # test JSON file that is corrupt
+        broken_json = xlpnr.get_json_key_value_pairs("tests/json/broken.json")
+        assert "is corrupt." in caplog.text
+        assert broken_json is None
 
-    non_existant_json = xlpnr.get_json_key_value_pairs("DNE.json")
-    assert non_existant_json is None
+        # test valid JSON file
+        valid_names = xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)
+        assert isinstance(valid_names, dict)
 
-    broken_json = xlpnr.get_json_key_value_pairs("tests/json/broken.json")
-    assert broken_json is None
+        # test JSON file without measurement key
+        no_names = xlpnr.get_json_key_value_pairs(JSON_WITHOUT_USEFUL_DATA)
+        assert no_names is None
 
-    no_measurements = xlpnr.get_json_key_value_pairs(
-        "tests/json/no_measurements.json"
-    )
-    assert no_measurements is None
+        # test JSON file with measurement key that is empty
+        no_measurements = xlpnr.get_json_key_value_pairs(
+            "tests/json/no_measurements.json"
+        )
+        assert 'No "measurement" field' in caplog.text
+        assert no_measurements is None
 
-class TestUtilities(unittest.TestCase):
+        # test JSON that has measurement with no name or expression
+        def _empty_measurements(fh):
+            return {
+                "measurements": [
+                    {
+                        "goose": "Frank",
+                        "feathers": True
+                    }
+                ]
+            }
+        monkeypatch.setattr("json.load", _empty_measurements)
+        assert len(xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)) == 0
+        assert 'is missing name and/or expressions' in caplog.text
+
+        # test JSON that has expression with no name, type, or value
+        def _empty_expressions(fh):
+            return {
+                "measurements": [
+                    {
+                        "name": "Frank",
+                        "expressions": [
+                            {
+                                "bbq": False,
+                                "answer": 42,
+                                "networth": None
+                            }
+                        ]
+                    }
+                ]
+            }
+
+        monkeypatch.setattr("json.load", _empty_expressions)
+        assert len(xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)) == 0
+        # xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)
+        assert 'missing name/type/value fields in' in caplog.text
+
+
+class TestUtilities():
     def test_check_dict_keys(self):
         test_dict = {
             "test_key1": ["item 1", "item 2"],
@@ -49,7 +95,7 @@ class TestUtilities(unittest.TestCase):
         assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key3"]) is False
         assert xlpnr.check_dict_keys(test_dict, ["test_key1", "test_key4"]) is True
         assert xlpnr.check_dict_keys(test_dict, ["test_non_list"]) is True
-
+        assert xlpnr.check_dict_keys('not a dict', ["test_non_list"]) is False
 
     def test_report_difference(self):
         test_date_1 = datetime.datetime(1984, 6, 17)
