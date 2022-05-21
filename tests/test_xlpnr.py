@@ -212,6 +212,17 @@ class MockWorkbook():
         self.names = [MockXLName(n) for n in names]
 
 class TestXLPT():
+    mock_source_dict = {
+        "k1": 12,
+        "k2": 3,
+        "k4": [4, 3, 2]
+    }
+    def _mock_target_dict(self, arg):
+        return {
+            "k1": 15,
+            "k3": 9,
+            "k4": [1, 2, 3]
+        }
     @classmethod
     def setup_class(cls):
         cls._load_json_test(cls)
@@ -288,23 +299,12 @@ class TestXLPT():
         os.remove(backup_path)
 
     def test_update_named_ranges(self, monkeypatch, capsys):
-        mock_source_dict = {
-            "k1": 12,
-            "k2": 3,
-            "k4": 5
-        }
-        def _mock_target_dict(arg):
-            return {
-                "k1": 15,
-                "k3": 9,
-                "k4": [1, 2, 3]
-            }
 
         # Test for source dict as argument
         monkeypatch.setattr(xlpnr, 'get_workbook_key_value_pairs',
-            _mock_target_dict)
+            self._mock_target_dict)
         monkeypatch.setattr(xlpnr, 'write_named_ranges', lambda *_: None)
-        unr_ret = xlpnr.update_named_ranges(mock_source_dict, self.workbook)
+        unr_ret = xlpnr.update_named_ranges(self.mock_source_dict, self.workbook)
         assert sorted(list(unr_ret.keys())) == ['k1', 'k4']
         assert unr_ret['k1'] == 15
 
@@ -320,6 +320,70 @@ class TestXLPT():
         captured = capsys.readouterr()
         assert "No named ranges in Excel file." in captured.out
         
+    def test_write_named_ranges(self, monkeypatch, capsys, caplog):
+        # disable functions
+        for function in [
+            'preview_named_range_update',
+            'backup_workbook',
+            'write_named_range'
+        ]:
+            monkeypatch.setattr(xlpnr, function, lambda *_: None)
+        
+        # Test with user abort
+        monkeypatch.setattr('builtins.input', lambda _: 'n')
+        xlpnr.write_named_ranges(
+            self._mock_target_dict,
+            self.mock_source_dict,
+            self.workbook, "test"
+        )
+        captured = capsys.readouterr()
+        assert ("Aborted.") in captured.out
+
+        # Test with user confirm
+        monkeypatch.setattr('builtins.input', lambda _: 'y')
+        xlpnr.write_named_ranges(
+            self._mock_target_dict,
+            self.mock_source_dict,
+            self.workbook, "test",
+            backup = True
+        )
+        assert "Backed up to" in caplog.text
+        assert "Source: test" in caplog.text
+
+    def test_preview_named_range_update(self, monkeypatch, capsys):
+        def _mock_print_cols(widths, values):
+            print(f"{[v for v in values]}")
+        def _mock_rep_diff(v1, v2):
+            try:
+                return v1 - v2
+            except TypeError:
+                return 'none'
+        monkeypatch.setattr(xlpnr, 'print_columns', _mock_print_cols)
+        monkeypatch.setattr(xlpnr, 'report_difference', _mock_rep_diff)
+        mock_target_dict = self._mock_target_dict(None)
+        mock_target_dict["k2"] = 3.00001
+        self.mock_source_dict["k5"] = {"x": 1.1, "y": 2.2, "z": 3.3}
+        mock_target_dict["k5"] =  1.2
+        xlpnr.preview_named_range_update(
+            mock_target_dict,
+            self.mock_source_dict
+        )
+        captured = capsys.readouterr()
+        # ensure items are being hidden
+        assert "k2" not in captured.out
+
+        # test that valid value is being printed
+        assert "k1" in captured.out
+
+        # test that lists are being printed
+        assert "k4[0]" in captured.out
+
+        # test that dicts are being printed
+        assert "'k5[x]', 1.2" in captured.out
+        
+        # test that excel values aren't repeated if not list
+        assert "'k5[y]', None" in captured.out
+
 class TestXLUT(unittest.TestCase):
     def setUp(self):
         self._load_json_test()

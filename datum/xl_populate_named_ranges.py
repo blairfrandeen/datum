@@ -230,7 +230,7 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
 
 
 def preview_named_range_update(
-    existing_values: dict, new_values: dict, decimals: int = 3, min_diff: float = 0.001
+    existing_values: dict, new_values: dict, min_diff: float = 0.001
 ) -> None:
     """Print out list of values that will be overwritten."""
     column_widths = [36, 17, 17, 17]
@@ -252,12 +252,14 @@ def preview_named_range_update(
                     item_name = f"{range_name}[{index}]"
                 if isinstance(excel_value, list):
                     excel_item = excel_value[index]
-                else:
+                elif index == 0:
                     excel_item = excel_value
+                else:
+                    excel_item = None
 
                 difference = report_difference(excel_item, json_item)
                 if isinstance(difference, float) and abs(difference) < min_diff:
-                    continue
+                    continue # @pytest-pass
                 print_columns(
                     column_widths, [item_name, excel_item, json_item, difference]
                 )
@@ -343,11 +345,10 @@ def update_named_ranges(
     # Check if source is json file
     if isinstance(source, str) and source.lower().endswith(".json"):
         source_data: Optional[dict] = get_json_key_value_pairs(source)
-        # TODO: Unit Test
+        source_str: str = source
         if not source_data:
             print("No measurement data found in JSON file.")
             return None
-        source_str: str = source
 
     # TODO: Unit test
     elif isinstance(source, dict):
@@ -384,8 +385,8 @@ def write_named_ranges(
 
     print("The values listed above will be overwritten.")
     # TODO: Add argument to function to skip confirmation
-    print("Enter 'y' to continue: ", end="")
-    overwrite_confirm: str = input()
+    # print("Enter 'y' to continue: ", end="")
+    overwrite_confirm: str = input("Enter 'y' to continue: ")
     if overwrite_confirm == "y":
         if backup:
             backup_path: Path = backup_workbook(workbook)
