@@ -784,11 +784,13 @@
             ]
         }
     ],
-    "part_name": "datum_nx_test_measurements",
-    "part_path": "C:\\Users\\frandeen\\Documents\\datum\\tests\\nx\\datum_nx_test_measurements.prt",
-    "part_rev": null,
-    "part_units": "Millimeters",
-    "retrieval_date": "2022-05-08 09:27:57",
-    "user": "frandeen",
-    "computer": "MT-205700"
+    "METADATA": {
+        "part_name": "datum_nx_test_measurements",
+        "part_path": "C:\\Users\\frandeen\\Documents\\datum\\tests\\nx\\datum_nx_test_measurements.prt",
+        "part_rev": null,
+        "part_units": "Millimeters",
+        "retrieval_date": "2022-05-08 09:27:57",
+        "user": "frandeen",
+        "computer": "MT-205700"
+    }
 }

@@ -74,6 +74,20 @@ class TestJson:
         assert len(xlpnr.get_json_key_value_pairs(TEST_JSON_FILE)) == 0
         assert "missing name/type/value fields in" in caplog.text
 
+    def test_get_metadata(self, caplog):
+        # test non-existant JSON
+        assert xlpnr.load_metadata_from_json('NON_EXISTANT_JSON') is None
+        assert 'not found.' in caplog.text
+
+        # test JSON file without measurement key
+        assert xlpnr.load_metadata_from_json(JSON_WITHOUT_USEFUL_DATA) is None
+        assert 'No "METADATA" in ' in caplog.text
+
+        # test valid JSON file
+        metadata = xlpnr.load_metadata_from_json(TEST_JSON_FILE)
+        for key in ['part_name', 'part_path', 'part_rev', 'part_units']:
+            assert key in metadata.keys()
+
 
 class TestUtilities:
     def test_check_dict_keys(self):
