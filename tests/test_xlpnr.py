@@ -77,8 +77,8 @@ class TestJson:
 
     def test_get_metadata(self, caplog):
         # test non-existant JSON
-        assert xlpnr.load_metadata_from_json('NON_EXISTANT_JSON') is None
-        assert 'not found.' in caplog.text
+        assert xlpnr.load_metadata_from_json("NON_EXISTANT_JSON") is None
+        assert "not found." in caplog.text
 
         # test JSON file without measurement key
         assert xlpnr.load_metadata_from_json(JSON_WITHOUT_USEFUL_DATA) is None
@@ -86,12 +86,13 @@ class TestJson:
 
         # test valid JSON file
         metadata = xlpnr.load_metadata_from_json(TEST_JSON_FILE)
-        for key in ['part_name', 'part_path', 'part_rev', 'part_units']:
+        for key in ["part_name", "part_path", "part_rev", "part_units"]:
             assert key in metadata.keys()
 
         # test JSON file that is corrupt
         assert xlpnr.load_metadata_from_json(BROKEN_JSON) is None
         assert "is corrupt." in caplog.text
+
 
 class TestUtilities:
     def test_check_dict_keys(self):
@@ -253,28 +254,43 @@ class TestXL:
     def test_dump(self, monkeypatch, caplog):
         # test dumping with bad JSON file
         monkeypatch.setattr(xlpnr, "get_json_key_value_pairs", lambda _: None)
-        xlpnr.dump(self.workbook, 'json_test.json')
-        sheet_name = 'DATUM json_test.json'
-        assert"No key-value pairs in JSON file to dump." in caplog.text
-        
+        xlpnr.dump(self.workbook, "json_test.json")
+        sheet_name = "DATUM json_test.json"
+        assert "No key-value pairs in JSON file to dump." in caplog.text
+
         # test dumping with JSON file, no metadata
         monkeypatch.setattr(xlpnr, "load_metadata_from_json", lambda _: None)
-        monkeypatch.setattr(xlpnr, "get_json_key_value_pairs", lambda _: self.mock_source_dict)
-        xlpnr.dump(self.workbook, 'json_test.json')
-        assert self.workbook.sheets[sheet_name].range('A1:B1').value == ['PARAMETER', 'VALUE']
-        # self.workbook.sheets[sheet_name].delete()  # clean up
+        monkeypatch.setattr(
+            xlpnr, "get_json_key_value_pairs", lambda _: self.mock_source_dict
+        )
+        xlpnr.dump(self.workbook, "json_test.json")
+        assert self.workbook.sheets[sheet_name].range("A1:B1").value == [
+            "PARAMETER",
+            "VALUE",
+        ]
 
         # test dumping with good JSON file
-        monkeypatch.setattr(xlpnr, "load_metadata_from_json", lambda _: {'test': 'datum' })
-        xlpnr.dump(self.workbook, 'json_test.json')
-        assert self.workbook.sheets[sheet_name].range('A1:B1').value == ['test', 'datum']
-        assert self.workbook.sheets[sheet_name].range('A3:B3').value == ['PARAMETER', 'VALUE']
+        monkeypatch.setattr(
+            xlpnr, "load_metadata_from_json", lambda _: {"test": "datum"}
+        )
+        xlpnr.dump(self.workbook, "json_test.json")
+        assert self.workbook.sheets[sheet_name].range("A1:B1").value == [
+            "test",
+            "datum",
+        ]
+        assert self.workbook.sheets[sheet_name].range("A3:B3").value == [
+            "PARAMETER",
+            "VALUE",
+        ]
         for index, key in enumerate(self.mock_source_dict):
-            assert self.workbook.sheets[sheet_name].range(f'A{index+4}').value == key
+            assert self.workbook.sheets[sheet_name].range(f"A{index+4}").value == key
             test_value = self.mock_source_dict[key]
             if isinstance(test_value, list):
                 test_value = test_value[0]
-            assert self.workbook.sheets[sheet_name].range(f'B{index+4}').value == test_value
+            assert (
+                self.workbook.sheets[sheet_name].range(f"B{index+4}").value
+                == test_value
+            )
 
     def test_get_workbook_kvp(self, caplog):
         # test empty workbook with no names

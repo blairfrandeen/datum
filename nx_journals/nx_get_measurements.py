@@ -47,7 +47,7 @@ def get_metadata(nxSession):
     for key in metadata.keys():
         nxprint(f"{key}: {metadata[key]}")
 
-    return { "METADATA": metadata }
+    return {"METADATA": metadata}
 
 
 def find_feature_by_name(feature_name):

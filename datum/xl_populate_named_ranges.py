@@ -31,7 +31,6 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     Returns the path of the backup copy."""
     # TODO: Make more robust naming convention
     # TODO: Verify M365 files are backing up correctly
-    # TODO: Implement unit tests
     print(f"Backuping up {workbook.name}...")
     wb_name: str = workbook.name.split(".xlsx")[0]
 
@@ -59,7 +58,7 @@ def dump(workbook: xw.main.Book, json_file: str) -> None:
     that originated from a JSON file, and place it in Excel
     in a new worksheet for easy access.
     """
-    sheet_name: str = "DATUM " + json_file.split('\\')[-1]
+    sheet_name: str = "DATUM " + json_file.split("\\")[-1]
     # get the data from the json_file
     data = get_json_key_value_pairs(json_file)
     if data is None:
@@ -68,27 +67,28 @@ def dump(workbook: xw.main.Book, json_file: str) -> None:
         # create a new worksheet
         try:
             workbook.sheets.add(sheet_name)
-        except ValueError: # sheet already exists
+        except ValueError:  # sheet already exists
             workbook.sheets[sheet_name].delete()
             workbook.sheets.add(sheet_name)
-        
+
         # keep count of rows added
         current_row: int = 1
-        
+
         # dump metadata
         metadata = load_metadata_from_json(json_file)
         if metadata is not None:
             for key in metadata:
                 target_range: str = f"A{current_row}:B{current_row}"
                 workbook.sheets[sheet_name].range(target_range).value = [
-                    key, metadata[key]
+                    key,
+                    metadata[key],
                 ]
                 current_row += 1
-            current_row += 1 # blank row
+            current_row += 1  # blank row
 
         # create header row
         target_range = f"A{current_row}:B{current_row}"
-        workbook.sheets[sheet_name].range(target_range).value = ['PARAMETER', 'VALUE']
+        workbook.sheets[sheet_name].range(target_range).value = ["PARAMETER", "VALUE"]
         current_row += 1
 
         # add each key-value pair from the data
@@ -126,15 +126,15 @@ def load_metadata_from_json(json_file: str) -> Optional[dict]:
     try:
         with open(json_file, "r") as json_handle:
             json_metadata: dict = json.load(json_handle)
-            if check_dict_keys(json_metadata, ['METADATA']):
-                return json_metadata['METADATA']
+            if check_dict_keys(json_metadata, ["METADATA"]):
+                return json_metadata["METADATA"]
             else:
                 logger.debug(f'No "METADATA" in {json_file}')
                 return None
 
     # TODO: Build JSON Validation function
     except FileNotFoundError:
-        logger.debug(f'{json_file} not found.')
+        logger.debug(f"{json_file} not found.")
         return None
     except json.decoder.JSONDecodeError:
         logger.error(f"JSON file {json_file} is corrupt.")
@@ -164,8 +164,6 @@ def write_named_range(
         # Flatten any arbitrary list
         new_value = list(flatten_list(new_value))
         new_value_len: int = len(new_value)
-        # new_value_len: int = list_len(new_value)
-        # TODO: Unit test for this case
         if new_value_len > target_range.size:
             # Truncate input if range size is too small
             new_value = new_value[: target_range.size]
@@ -431,7 +429,6 @@ def update_named_ranges(
             print("No measurement data found in JSON file.")
             return None
 
-    # TODO: Unit test
     elif isinstance(source, dict):
         source_data = source
         source_str = "UNDO BUFFER"
@@ -466,7 +463,6 @@ def write_named_ranges(
 
     print("The values listed above will be overwritten.")
     # TODO: Add argument to function to skip confirmation
-    # print("Enter 'y' to continue: ", end="")
     overwrite_confirm: str = input("Enter 'y' to continue: ")
     if overwrite_confirm == "y":
         if backup:

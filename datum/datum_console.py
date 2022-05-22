@@ -3,8 +3,8 @@ from collections import namedtuple
 from typing import List, NamedTuple, Optional, Union
 
 import xlwings as xw
-# TODO: Make this work for both pytest & when trying to actually run the console
-from xl_populate_named_ranges import logger, update_named_ranges, backup_workbook, dump
+from xl_populate_named_ranges import (backup_workbook, dump, logger,
+                                      update_named_ranges)
 
 Command: NamedTuple = namedtuple("Command", "id function")
 
@@ -208,7 +208,6 @@ def console(command_list: list, test_flag: bool = False) -> None:
 
 def main() -> None:
     cs: ConsoleSession = ConsoleSession()
-    # TODO: Add backup command
     command_list: list = [
         (["b"], cs.backup),
         (["cd"], cs.chdir),
