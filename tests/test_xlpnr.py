@@ -2,8 +2,6 @@ import datetime
 import logging
 import os
 from pathlib import Path
-import unittest
-from unittest.mock import patch
 
 import pytest
 import xlwings as xw
@@ -194,6 +192,8 @@ class TestUtilities():
         assert list(xlpnr.flatten_list(list_1d)) == list_1d
         assert list(xlpnr.flatten_list(list_2d)) == list_1d + list_1d
         assert list(xlpnr.flatten_list(list_mixed)) == list_1d + list_1d
+        with pytest.raises(TypeError):
+            assert list(xlpnr.flatten_list({1: 'one', 2: 'two'})) == [1]
 
 class MockXLName():
     def __init__(self, name):
@@ -211,7 +211,7 @@ class MockWorkbook():
         self.name = name
         self.names = [MockXLName(n) for n in names]
 
-class TestXLPT():
+class TestXL():
     mock_source_dict = {
         "k1": 12,
         "k2": 3,
@@ -384,87 +384,81 @@ class TestXLPT():
         # test that excel values aren't repeated if not list
         assert "'k5[y]', None" in captured.out
 
-class TestXLUT(unittest.TestCase):
-    def setUp(self):
-        self._load_json_test()
-        self._load_excel_test()
-
-    def _load_json_test(self):
-        self.json_file = TEST_JSON_FILE
-
-    def _load_excel_test(self):
-        """Open an invisible Excel workbook to execute tests."""
-        # visible=False tag will run tests in background
-        # without opening Excel window
-        self.app = xw.App(visible=False)
-        self.workbook = self.app.books.open(TEST_EXCEL_WB)
-
-        # starting self.app will open a blank workbook that
-        # isn't needed. Close it prior to tests
-        self.app.books[0].close()
-
-    def test_write_named_range(self):
-        testvalue = 700_000
-        assert (
-            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", testvalue)
-            == testvalue
-        )
-
+    def test_write_named_range(self, monkeypatch, caplog):
+        # test writing to non-existant range
         with pytest.raises(KeyError):
-            xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", testvalue)
+            xlpnr.write_named_range(self.workbook, "NON-EXISTANT-RANGE", None)
+
+        # test writing to range with missing reference
         with pytest.raises(TypeError):
-            xlpnr.write_named_range(self.workbook, "missing_ref", testvalue)
+            xlpnr.write_named_range(self.workbook, "missing_ref", None)
 
-        illegal_dict = {"kivo": "stinker", "layla": "earflops"}
-        self.assertIsNone(
-            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", illegal_dict)
-        )
+        # test writing to range with invalid type
+        with pytest.raises(TypeError):
+            xlpnr.write_named_range(self.workbook, "Test_Single_Value", MockXLName('test'))
+        
+        # test single values of all valid types
+        single_test_values = [ None, 42, None, 3.14, None, 'good morning!', None,
+            datetime.datetime(1984,6,17), None]
+        for value in single_test_values:
+            # test that function executes
+            assert xlpnr.write_named_range(self.workbook, 'Test_Single_Value', value) == value
+            # independent test to show it wrote correctly
+            assert self.workbook.names['Test_Single_Value'].refers_to_range.value == value
 
-        illegal_tuple = (1, 2, 3)
-        self.assertIsNone(
-            xlpnr.write_named_range(
-                self.workbook, "SURFACE_PAINTED.area", illegal_tuple
-            )
-        )
+        # test writing of lists
+        list_test_values = [
+            [ 1, 2, 3 ],
+            [ None, None, None],
+            [ 2.1, 4.2, 99.99 ],
+            [ 'blair had', 'too much', 'wine tonight' ],
+            [ datetime.datetime(2021,4,23,4,23,42), None, 42 ],
+            [ None, None, None]
+        ]
+        def _mock_flatten(list):
+            return list # this test method only uses flat lists to begin with.
+        monkeypatch.setattr(xlpnr, 'flatten_list', _mock_flatten)
+        for list in list_test_values:
+            # test that function executes
+            assert xlpnr.write_named_range(self.workbook, 'List_Test', list) == list
+            # independent test to show it wrote correctly
+            assert self.workbook.names['List_Test'].refers_to_range.value == list
 
-    def test_write_empty_range(self):
-        assert (
-            xlpnr.write_named_range(self.workbook, "SURFACE_PAINTED.area", None) is None
-        )
+        # test a list of things that won't work
+        badlist = [ {1: 'one', 2: 'two'}, MockXLName('test') ]
+        with pytest.raises(TypeError):
+            xlpnr.write_named_range(self.workbook, 'List_Test', badlist)
 
-    def test_write_named_vector_range(self):
-        horizontal_range = "AIR_NUT.point_1"
-        vertical_range = "HOUSING.moments_of_inertia_centroidal"
-        horizontal_result = xlpnr.write_named_range(
-            self.workbook, horizontal_range, [3.0, 2.11, 9.99]
-        )
-        vertical_result = xlpnr.write_named_range(
-            self.workbook, vertical_range, [0.012, 0.11, 0.99]
-        )
-        self.assertEqual(vertical_result[1], 0.11)
-        self.assertEqual(horizontal_result[2], 9.99)
+        # test writing of matrices
+        test_matrices = [ # assume already flattened
+            [1,2,3,4,5,6,7,8,0],
+            [1.1,2.2,3.3,4.4,5.3,0.93,1,None,.98],
+            ['blair','needs','to','shave',None,'at','all','!!!', datetime.datetime(2022,5,21)],
+            [None, None, None,None, None, None,None, None, None]
+        ]
+        for matrix in test_matrices:
+            # test that function executes
+            assert xlpnr.write_named_range(self.workbook, 'Matrix_Test', matrix) == matrix
+            # independent test to show it wrote correctly
+            # requires manual flattening, only check one value
+            assert self.workbook.names['Matrix_Test'].refers_to_range.value[1][1] == matrix[4]
 
-    def test_wrong_size_range(self):
-        small_range = "too_small_range"
-        large_range = "Range_that_s_too_large"
-        wrong_size_list = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]
-        self.assertEqual(
-            xlpnr.write_named_range(self.workbook, small_range, wrong_size_list), [1, 2]
-        )
+        # test writing to a range that's too small
+        assert xlpnr.write_named_range(self.workbook, 'too_small_range', [1, 2, 3]) == [1, 2]
+        assert xlpnr.write_named_range(self.workbook, 'too_small_range', [None, None]) == [None, None]
+        target_range = self.workbook.names['too_small_range'].refers_to_range
+        overflow_range = self.workbook.sheets[target_range.sheet].cells[
+            target_range.row - 1, target_range.column + 1
+        ]
+        assert overflow_range.value is None
+        assert 'Vector of length 3 will be truncated.' in caplog.text
 
-        self.assertEqual(
-            xlpnr.write_named_range(self.workbook, large_range, wrong_size_list),
-            list(xlpnr.flatten_list(wrong_size_list)),
-        )
-        self.assertIsNone(self.workbook.names[large_range].refers_to_range.value[2][0])
-        # self.assertIsNone(xlpnr.read_named_range(self.workbook, large_range)[2][0])
-
-    def tearDown(self):
-        """Close all open workbooks, and quit Excel."""
-        for book in self.app.books:
-            book.close()
-        self.app.quit()
-
-
-if __name__ == "__main__":
-    unittest.main()
+        # test writing to a range that's too large
+        assert xlpnr.write_named_range(self.workbook, 'too_large_range', [1, 2, 3]) == [1, 2, 3]
+        assert xlpnr.write_named_range(self.workbook, 'too_large_range', [None, None, None]) == [None, None, None]
+        target_range = self.workbook.names['too_large_range'].refers_to_range
+        overflow_range = self.workbook.sheets[target_range.sheet].cells[
+            target_range.row, target_range.column + 1
+        ]
+        assert overflow_range.value is None
+        assert 'larger than required.' in caplog.text

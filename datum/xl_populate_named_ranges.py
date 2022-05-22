@@ -79,8 +79,8 @@ def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
 def write_named_range(
     workbook: xw.main.Book,
     range_name: str,
-    new_value: Optional[Union[list, float, int, str]],
-) -> Optional[Union[list, int, str, float]]:
+    new_value: Optional[Union[list, float, int, str, datetime.datetime]],
+) -> Optional[Union[list, int, str, float, datetime.datetime]]:
     """Write a value or list to a named range.
 
     Keyword arguments:
@@ -92,6 +92,7 @@ def write_named_range(
         raise KeyError(f"Name {range_name} not in {workbook.name}")
     if "!#REF" in workbook.names[range_name].refers_to:
         raise TypeError(f"Name {range_name} has a #REF! error.")
+
     target_range: xw.main.Range = workbook.names[range_name].refers_to_range
 
     if isinstance(new_value, list):
@@ -112,16 +113,15 @@ def write_named_range(
                 {target_range.size} is larger than required."
             )
         for index in range(min(target_range.size, new_value_len)):
+            if not isinstance(new_value[index], (int, str, float, list, datetime.datetime)) and new_value[index] is not None:
+                raise TypeError(f'Write {type(new_value[index])} not allowed.')
             target_range[index].value = new_value[index]
         return new_value
-    elif isinstance(new_value, (int, str, float)) or new_value is None:
+    elif isinstance(new_value, (int, str, float, datetime.datetime)) or new_value is None:
         target_range.value = new_value
         return new_value
     else:
-        logger.error(
-            f"Cannot write value of type {type(new_value)} to range {range_name}"
-        )
-        return None
+        raise TypeError(f"Cannot write value of type {type(new_value)}")
 
 
 #######################
@@ -147,6 +147,8 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
 
 def flatten_list(target_list: list):
     """Flatten any nested list."""
+    if not isinstance(target_list, list):
+        raise TypeError('Cannot flatten a non-list')
     for element in target_list:
         if isinstance(element, list):
             for sub_element in flatten_list(element):
