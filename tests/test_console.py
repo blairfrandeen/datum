@@ -85,9 +85,14 @@ class TestConsoleSession:
         captured = capsys.readouterr()
         assert "No JSON data is loaded." in captured.out
         
-        # test dump with JSON loaded
-        console_test_session.excel_workbook = MockWorkbook('test')
+        # test dump with no Workbook loaded
         console_test_session.json_file = 'test.json'
+        console_test_session.dump_json()
+        captured = capsys.readouterr()
+        assert "No Excel workbook is loaded." in captured.out
+
+        # test dump with JSON and Excel loaded
+        console_test_session.excel_workbook = MockWorkbook('test')
         console_test_session.dump_json()
         captured = capsys.readouterr()
         assert "dump_test_success" in captured.out

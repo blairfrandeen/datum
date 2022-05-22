@@ -37,6 +37,8 @@ class ConsoleSession:
         """Dump All JSON data to Excel."""
         if not self.json_file:
             print("No JSON data is loaded.")
+        elif not self.excel_workbook:
+            print("No Excel workbook is loaded.")
         else:
             dump(self.excel_workbook, self.json_file)
 

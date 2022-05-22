@@ -54,30 +54,50 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     return backup_path
 
 
-def dump(workbook: xw.main.Book, json_file: dict) -> None:
+def dump(workbook: xw.main.Book, json_file: str) -> None:
     """Take data frome a dictionary of key-value pairs
     that originated from a JSON file, and place it in Excel
-    in a new worksheet for easy access."""
-    sheet_name: str = 'DATUM'
-    
+    in a new worksheet for easy access.
+    """
+    sheet_name: str = "DATUM " + json_file.split('\\')[-1]
     # get the data from the json_file
     data = get_json_key_value_pairs(json_file)
     if data is None:
         logger.error("No key-value pairs in JSON file to dump.")
     else:
         # create a new worksheet
-        workbook.sheets.add(sheet_name)
+        try:
+            workbook.sheets.add(sheet_name)
+        except ValueError: # sheet already exists
+            workbook.sheets[sheet_name].delete()
+            workbook.sheets.add(sheet_name)
         
+        # keep count of rows added
+        current_row: int = 1
+        
+        # dump metadata
+        metadata = load_metadata_from_json(json_file)
+        if metadata is not None:
+            for key in metadata:
+                target_range: str = f"A{current_row}:B{current_row}"
+                workbook.sheets[sheet_name].range(target_range).value = [
+                    key, metadata[key]
+                ]
+                current_row += 1
+            current_row += 1 # blank row
+
         # create header row
-        workbook.sheets[sheet_name].range('A1:B1').value = ['PARAMETER', 'VALUE']
+        target_range = f"A{current_row}:B{current_row}"
+        workbook.sheets[sheet_name].range(target_range).value = ['PARAMETER', 'VALUE']
+        current_row += 1
 
         # add each key-value pair from the data
-        starting_row: int = 2
-        for index, key in enumerate(data):
-            target_range: str = f"A{starting_row + index}:B{starting_row + index}"
+        for index, key in enumerate(sorted(data)):
+            target_range = f"A{current_row + index}:B{current_row + index}"
             workbook.sheets[sheet_name].range(target_range).value = list(
                 flatten_list([key, data[key]])
             )
+
 
 def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
     """Find all named ranges in a workbook and return
@@ -102,6 +122,7 @@ def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
 
 
 def load_metadata_from_json(json_file: str) -> Optional[dict]:
+    """Loads 'METADATA' field from JSON file"""
     try:
         with open(json_file, "r") as json_handle:
             json_metadata: dict = json.load(json_handle)
@@ -109,10 +130,16 @@ def load_metadata_from_json(json_file: str) -> Optional[dict]:
                 return json_metadata['METADATA']
             else:
                 logger.debug(f'No "METADATA" in {json_file}')
+                return None
 
+    # TODO: Build JSON Validation function
     except FileNotFoundError:
         logger.debug(f'{json_file} not found.')
         return None
+    except json.decoder.JSONDecodeError:
+        logger.error(f"JSON file {json_file} is corrupt.")
+        return None
+
 
 def write_named_range(
     workbook: xw.main.Book,
@@ -232,6 +259,7 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
     try:
         with open(json_file, "r") as json_file_handle:
             json_data: dict = json.load(json_file_handle)
+    # TODO: Build JSON Validation function
     except FileNotFoundError:
         logger.error(f"Unable to open {json_file}")
         return None
