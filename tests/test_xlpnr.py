@@ -223,6 +223,26 @@ class TestXL:
         # isn't needed. Close it prior to tests
         self.app.books[0].close()
 
+    def test_backup(self):
+        backup_path = Path(TEST_EXCEL_WB.replace(".", "_BACKUP."))
+        if os.path.isfile(backup_path):
+            os.remove(backup_path)
+        backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
+        assert os.path.isfile(backup_wb)
+        assert backup_path == backup_wb
+        os.remove(backup_path)
+
+    def test_dump(self):
+        xlpnr.dump(self.workbook, self.mock_source_dict)
+        assert self.workbook.sheets[0].name == "DATUM"
+        assert self.workbook.sheets['DATUM'].range('A1:B1').value == ['PARAMETER', 'VALUE']
+        for index, key in enumerate(self.mock_source_dict):
+            assert self.workbook.sheets['DATUM'].range(f'A{index+2}').value == key
+            test_value = self.mock_source_dict[key]
+            if isinstance(test_value, list):
+                test_value = test_value[0]
+            assert self.workbook.sheets['DATUM'].range(f'B{index+2}').value == test_value
+
     def test_get_workbook_kvp(self, caplog):
         # test empty workbook with no names
         blank_wb = self.app.books.add()
@@ -258,15 +278,6 @@ class TestXL:
             [None, None, None],
             [None, None, None],
         ]
-
-    def test_backup(self):
-        backup_path = Path(TEST_EXCEL_WB.replace(".", "_BACKUP."))
-        if os.path.isfile(backup_path):
-            os.remove(backup_path)
-        backup_wb = xlpnr.backup_workbook(self.workbook, backup_dir="tests\\xl")
-        assert os.path.isfile(backup_wb)
-        assert backup_path == backup_wb
-        os.remove(backup_path)
 
     def test_update_named_ranges(self, monkeypatch, capsys):
 
