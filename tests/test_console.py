@@ -19,7 +19,9 @@ def console_test_session():
 def console_command_list(console_test_session):
     cs = console_test_session
     command_list = [
+        (["b"], cs.backup),
         (["cd"], cs.chdir),
+        (["d", "dump"], cs.dump_json),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
         (["pwd"], cs.pwd),
@@ -71,6 +73,24 @@ class TestConsoleSession:
         captured = capsys.readouterr()
         assert "backup_test_success" in captured.out
 
+
+    def test_dump(self, monkeypatch, console_test_session, capsys):
+        def _mock_dump(*args):
+            print(f"dump_test_success")
+
+        monkeypatch.setattr(dc, "dump", _mock_dump)
+
+        # test dump with no JSON loaded
+        console_test_session.dump_json()
+        captured = capsys.readouterr()
+        assert "No JSON data is loaded." in captured.out
+        
+        # test dump with JSON loaded
+        console_test_session.excel_workbook = MockWorkbook('test')
+        console_test_session.json_file = 'test.json'
+        console_test_session.dump_json()
+        captured = capsys.readouterr()
+        assert "dump_test_success" in captured.out
 
     def test_load_measurement(self, monkeypatch, console_test_session):
         def _mock_select_json():

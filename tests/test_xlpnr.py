@@ -232,8 +232,15 @@ class TestXL:
         assert backup_path == backup_wb
         os.remove(backup_path)
 
-    def test_dump(self):
-        xlpnr.dump(self.workbook, self.mock_source_dict)
+    def test_dump(self, monkeypatch, caplog):
+        # test dumping with bad JSON file
+        monkeypatch.setattr(xlpnr, "get_json_key_value_pairs", lambda _: None)
+        xlpnr.dump(self.workbook, 'json_test.json')
+        assert"No key-value pairs in JSON file to dump." in caplog.text
+        
+        # test dumping with good JSON file
+        monkeypatch.setattr(xlpnr, "get_json_key_value_pairs", lambda _: self.mock_source_dict)
+        xlpnr.dump(self.workbook, 'json_test.json')
         assert self.workbook.sheets[0].name == "DATUM"
         assert self.workbook.sheets['DATUM'].range('A1:B1').value == ['PARAMETER', 'VALUE']
         for index, key in enumerate(self.mock_source_dict):
