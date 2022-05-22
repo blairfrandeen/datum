@@ -4,7 +4,7 @@ from typing import List, NamedTuple, Optional, Union
 
 import xlwings as xw
 # TODO: Make this work for both pytest & when trying to actually run the console
-from xl_populate_named_ranges import logger, update_named_ranges
+from xl_populate_named_ranges import logger, update_named_ranges, backup_workbook
 
 Command: NamedTuple = namedtuple("Command", "id function")
 
@@ -14,6 +14,13 @@ class ConsoleSession:
         self.json_file: Optional[str] = None
         self.excel_workbook: Optional[str] = None
         self.undo_buffer: Optional[dict] = None
+
+    def backup(self, *args) -> None:
+        """Backup workbook. Will backup in current directory only."""
+        if not self.excel_workbook:
+            print("No Excel workbook is loaded.")
+        else:
+            backup_workbook(self.excel_workbook)
 
     def chdir(self, *args) -> None:
         """Change directory. Wrapper for os.chdir() with error handling"""
@@ -194,6 +201,7 @@ def main() -> None:
     cs: ConsoleSession = ConsoleSession()
     # TODO: Add backup command
     command_list: list = [
+        (["b"], cs.backup),
         (["cd"], cs.chdir),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
