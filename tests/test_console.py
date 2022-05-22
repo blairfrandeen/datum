@@ -79,18 +79,8 @@ class TestConsoleSession:
 
         monkeypatch.setattr(dc, "dump", _mock_dump)
 
-        # test dump with no JSON loaded
-        console_test_session.dump_json()
-        captured = capsys.readouterr()
-        assert "No JSON data is loaded." in captured.out
-
-        # test dump with no Workbook loaded
-        console_test_session.json_file = "test.json"
-        console_test_session.dump_json()
-        captured = capsys.readouterr()
-        assert "No Excel workbook is loaded." in captured.out
-
         # test dump with JSON and Excel loaded
+        console_test_session.json_file = "test.json"
         console_test_session.excel_workbook = MockWorkbook("test")
         console_test_session.dump_json()
         captured = capsys.readouterr()
@@ -135,7 +125,7 @@ class TestConsoleSession:
         cts.undo_last_update()
         assert cts.undo_buffer["update_success"] is True
 
-    def test_update_named_ranges(self, console_test_session, monkeypatch):
+    def test_load_json_excel(self, console_test_session, monkeypatch):
         cts = console_test_session
 
         def _mock_select_json():
@@ -147,15 +137,19 @@ class TestConsoleSession:
             cts.excel_workbook = "excel_workbook"
 
         monkeypatch.setattr(cts, "load_workbook", _mock_select_workbook)
+        cts._load_json_excel()
+        assert cts.json_file == "json_file"
+        assert cts.excel_workbook == "excel_workbook"
 
+    def test_update_named_ranges(self, console_test_session, monkeypatch):
+        cts = console_test_session
+        cts.excel_workbook, cts.json_file = ['something', 'something_else']
         def _mock_xlpnr_update(arg1, arg2, arg3):
             return {"update_success": True}
 
         monkeypatch.setattr(dc, "update_named_ranges", _mock_xlpnr_update)
 
         cts.update_named_ranges()
-        assert cts.json_file == "json_file"
-        assert cts.excel_workbook == "excel_workbook"
         assert cts.undo_buffer["update_success"] is True
 
 

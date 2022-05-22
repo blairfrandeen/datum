@@ -15,6 +15,13 @@ class ConsoleSession:
         self.excel_workbook: Optional[str] = None
         self.undo_buffer: Optional[dict] = None
 
+    def _load_json_excel(self) -> None:
+        """Load JSON and Excel files for functions that need both."""
+        if not self.json_file:
+            self.load_measurement()
+        if not self.excel_workbook:
+            self.load_workbook()
+
     def backup(self, *args) -> None:
         """Backup workbook. Will backup in current directory only."""
         if not self.excel_workbook:
@@ -35,11 +42,8 @@ class ConsoleSession:
 
     def dump_json(self, *args) -> None:
         """Dump All JSON data to Excel."""
-        if not self.json_file:
-            print("No JSON data is loaded.")
-        elif not self.excel_workbook:
-            print("No Excel workbook is loaded.")
-        else:
+        self._load_json_excel()
+        if self.excel_workbook and self.json_file:
             dump(self.excel_workbook, self.json_file)
 
     def load_measurement(self, *args) -> None:
@@ -70,10 +74,7 @@ class ConsoleSession:
     def update_named_ranges(self, *args, backup: bool = False) -> None:
         """Update named ranges in the Excel file with matching
         data from the JSON measurement file"""
-        if not self.json_file:
-            self.load_measurement()
-        if not self.excel_workbook:
-            self.load_workbook()
+        self._load_json_excel()
         if self.json_file and self.excel_workbook:
             undo_buffer: dict = update_named_ranges(
                 self.json_file, self.excel_workbook, backup
