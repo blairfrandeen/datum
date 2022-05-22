@@ -25,6 +25,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 ## XLWINGS INTERFACES ##
 ########################
 
+
 def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     """Create a backup copy of the workbook.
     Returns the path of the backup copy."""
@@ -70,8 +71,7 @@ def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
         if "!#REF" in named_range.refers_to:
             logger.error(f"Name {named_range.name} has a #REF! error.")
             continue
-        workbook_named_ranges[named_range.name] =\
-            named_range.refers_to_range.value
+        workbook_named_ranges[named_range.name] = named_range.refers_to_range.value
 
     return workbook_named_ranges
 
@@ -113,11 +113,18 @@ def write_named_range(
                 {target_range.size} is larger than required."
             )
         for index in range(min(target_range.size, new_value_len)):
-            if not isinstance(new_value[index], (int, str, float, list, datetime.datetime)) and new_value[index] is not None:
-                raise TypeError(f'Write {type(new_value[index])} not allowed.')
+            if (
+                not isinstance(
+                    new_value[index], (int, str, float, list, datetime.datetime)
+                )
+                and new_value[index] is not None
+            ):
+                raise TypeError(f"Write {type(new_value[index])} not allowed.")
             target_range[index].value = new_value[index]
         return new_value
-    elif isinstance(new_value, (int, str, float, datetime.datetime)) or new_value is None:
+    elif (
+        isinstance(new_value, (int, str, float, datetime.datetime)) or new_value is None
+    ):
         target_range.value = new_value
         return new_value
     else:
@@ -132,7 +139,7 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
 
     Ensure keys are not empty lists. Warn if keys not found."""
     if not isinstance(target_dict, dict):
-        logger.warning('Not a dictionary.')
+        logger.warning("Not a dictionary.")
         return False
     for key in keys_to_check:
         if key not in target_dict.keys():
@@ -148,7 +155,7 @@ def check_dict_keys(target_dict: dict, keys_to_check: list) -> bool:
 def flatten_list(target_list: list):
     """Flatten any nested list."""
     if not isinstance(target_list, list):
-        raise TypeError('Cannot flatten a non-list')
+        raise TypeError("Cannot flatten a non-list")
     for element in target_list:
         if isinstance(element, list):
             for sub_element in flatten_list(element):
@@ -180,6 +187,7 @@ def report_difference(
 ########################
 #### CORE FUNCTIONS ####
 ########################
+
 
 def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
     """Load JSON measurement dict from a JSON file."""
@@ -261,7 +269,7 @@ def preview_named_range_update(
 
                 difference = report_difference(excel_item, json_item)
                 if isinstance(difference, float) and abs(difference) < min_diff:
-                    continue # @pytest-pass
+                    continue  # @pytest-pass
                 print_columns(
                     column_widths, [item_name, excel_item, json_item, difference]
                 )
@@ -286,11 +294,16 @@ def print_columns(
         if isinstance(value, float):
             # use percentage on last column
             if column == 3:
-                fspec = '%'
-            else: fspec = 'g'
+                fspec = "%"
+            else:
+                fspec = "g"
             print(
                 "{val:{al}{wid}.{prec}{fspec}}".format(
-                    val=value, al=alignments[column], wid=widths[column], prec=decimals, fspec=fspec
+                    val=value,
+                    al=alignments[column],
+                    wid=widths[column],
+                    prec=decimals,
+                    fspec=fspec,
                 ),
                 end="",
             )

@@ -56,17 +56,19 @@ class TestConsoleSession:
 
     def test_load_measurement(self, monkeypatch, console_test_session):
         def _mock_select_json():
-            return 'select_json'
+            return "select_json"
+
         monkeypatch.setattr(dc, "user_select_json_file", _mock_select_json)
         console_test_session.load_measurement()
-        assert console_test_session.json_file == 'select_json'
+        assert console_test_session.json_file == "select_json"
 
     def test_load_workbook(self, monkeypatch, console_test_session):
         def _mock_select_wb():
-            return 'select_wb'
+            return "select_wb"
+
         monkeypatch.setattr(dc, "user_select_open_workbook", _mock_select_wb)
         console_test_session.load_workbook()
-        assert console_test_session.excel_workbook == 'select_wb'
+        assert console_test_session.excel_workbook == "select_wb"
 
     def test_pwd(self, capsys, console_test_session):
         console_test_session.pwd()
@@ -93,6 +95,7 @@ class TestConsoleSession:
 
     def test_update_named_ranges(self, console_test_session, monkeypatch):
         cts = console_test_session
+
         def _mock_select_json():
             cts.json_file = "json_file"
 
@@ -142,7 +145,7 @@ def test_user_select_item(monkeypatch, capsys):
 
     # valid list of optoins
     valid_list = ["muffins", "cupcakes", "cookies", "more cookies"]
-    
+
     # test that string input is invalid
     monkeypatch.setattr("builtins.input", lambda _: "some string")
     dc.user_select_item(valid_list, "treats", test_flag=True)
