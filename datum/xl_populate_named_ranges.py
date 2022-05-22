@@ -101,6 +101,19 @@ def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
     return workbook_named_ranges
 
 
+def load_metadata_from_json(json_file: str) -> Optional[dict]:
+    try:
+        with open(json_file, "r") as json_handle:
+            json_metadata: dict = json.load(json_handle)
+            if check_dict_keys(json_metadata, ['METADATA']):
+                return json_metadata['METADATA']
+            else:
+                logger.debug(f'No "METADATA" in {json_file}')
+
+    except FileNotFoundError:
+        logger.debug(f'{json_file} not found.')
+        return None
+
 def write_named_range(
     workbook: xw.main.Book,
     range_name: str,
