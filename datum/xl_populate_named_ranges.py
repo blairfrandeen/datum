@@ -54,24 +54,30 @@ def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
     return backup_path
 
 
-def dump(workbook: xw.main.Book, data: dict) -> None:
+def dump(workbook: xw.main.Book, json_file: dict) -> None:
     """Take data frome a dictionary of key-value pairs
     that originated from a JSON file, and place it in Excel
     in a new worksheet for easy access."""
     sheet_name: str = 'DATUM'
-    # create a new worksheet
-    workbook.sheets.add(sheet_name)
     
-    # create header row
-    workbook.sheets[sheet_name].range('A1:B1').value = ['PARAMETER', 'VALUE']
+    # get the data from the json_file
+    data = get_json_key_value_pairs(json_file)
+    if data is None:
+        logger.error("No key-value pairs in JSON file to dump.")
+    else:
+        # create a new worksheet
+        workbook.sheets.add(sheet_name)
+        
+        # create header row
+        workbook.sheets[sheet_name].range('A1:B1').value = ['PARAMETER', 'VALUE']
 
-    # add each key-value pair from the data
-    starting_row: int = 2
-    for index, key in enumerate(data):
-        target_range: str = f"A{starting_row + index}:B{starting_row + index}"
-        workbook.sheets[sheet_name].range(target_range).value = list(
-            flatten_list([key, data[key]])
-        )
+        # add each key-value pair from the data
+        starting_row: int = 2
+        for index, key in enumerate(data):
+            target_range: str = f"A{starting_row + index}:B{starting_row + index}"
+            workbook.sheets[sheet_name].range(target_range).value = list(
+                flatten_list([key, data[key]])
+            )
 
 def get_workbook_key_value_pairs(workbook: xw.main.Book) -> Optional[dict]:
     """Find all named ranges in a workbook and return

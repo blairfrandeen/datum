@@ -4,7 +4,7 @@ from typing import List, NamedTuple, Optional, Union
 
 import xlwings as xw
 # TODO: Make this work for both pytest & when trying to actually run the console
-from xl_populate_named_ranges import logger, update_named_ranges, backup_workbook
+from xl_populate_named_ranges import logger, update_named_ranges, backup_workbook, dump
 
 Command: NamedTuple = namedtuple("Command", "id function")
 
@@ -32,6 +32,13 @@ class ConsoleSession:
                 print(f"Changed dir to {os.getcwd()}")
             except FileNotFoundError:
                 print("Directory not found.")
+
+    def dump_json(self, *args) -> None:
+        """Dump All JSON data to Excel."""
+        if not self.json_file:
+            print("No JSON data is loaded.")
+        else:
+            dump(self.excel_workbook, self.json_file)
 
     def load_measurement(self, *args) -> None:
         """Load measurement data from a JSON file"""
@@ -203,6 +210,7 @@ def main() -> None:
     command_list: list = [
         (["b"], cs.backup),
         (["cd"], cs.chdir),
+        (["d", "dump"], cs.dump_json),
         (["lm"], cs.load_measurement),
         (["lw"], cs.load_workbook),
         (["pwd"], cs.pwd),
