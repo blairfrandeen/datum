@@ -2,7 +2,11 @@
 Tools to pull engineering data from dispirate sources and understand performance metrics.
 
 ## Transfer Measurement Data from NX to Excel
-Currently this code includes two modules that allow the user to transfer limited data from measurement features in NX into named ranges in Excel.
+Currently this code includes two modules that allow the user to transfer data from measurement features in NX into named ranges in Excel.
+
+**BASIC USAGE**:
+- In NX part with saved measurements, run `nx_get_measurements.py` as an NX journal.
+- With Excel open, run `python datum/datum_console.py` and use the `dump` command to transfer values to Excel.
 
 ### Requirements
 - Python 3.8.3 or above
@@ -25,7 +29,7 @@ Some additional functionality (file picker) can be added to the NX Python instal
 
 
 ### Populating named Excel ranges with measurement data
-In your Excel file, you'll need to name the cells that you want to autopopulate. Select each cell and choose Formulas -> Define Name. You can select single cells, or multiple cells to define vectors, points, or lists. Multiple cells can be oriented horizontally or vertically. 
+In your Excel file, you'll need to name the cells that you want to autopopulate. Select each cell and choose Formulas -> Define Name. You can select single cells, or multiple cells to define vectors, points, or lists. Named ranges of multiple cells that accept lists of values. can be oriented horizontally or vertically. 
 
 The range names must be in the format `<FEATURE_NAME>.<expression_name>`. `<FEATURE_NAME>` is the name of your NX measurement feature; `<expression_name>` can be one of the following:
 
@@ -51,4 +55,4 @@ For example, if I wanted to know the mass and center of gravity of my chassis, I
 
 Once the Excel sheet is set up, run `datum/datum_console.py` from the directory where the JSON file was saved. The script will prompt you to choose the JSON file to read from (searches working directory only), and the Excel file to write to (lists open workbooks detected by xlwings). The script will also give you a preview of values to be overwritten, and prompts you prior to doing so. Basic undo functionality is now built in.
 
-Code exists (currently disabled) to save a backup copy of your file as `<filename>_BACKUP.xlsx` in the working directory in case you find running this code regrettable.
+Code exists to save a backup copy of your file as `<filename>_BACKUP.xlsx` in the working directory in case you find running this code regrettable.
