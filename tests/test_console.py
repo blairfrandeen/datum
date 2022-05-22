@@ -54,6 +54,24 @@ class TestConsoleSession:
         console_test_session.chdir("..")
         os.rmdir("./temp_test")
 
+    def test_backup(self, monkeypatch, console_test_session, capsys):
+        def _mock_backup(*args):
+            print(f"backup_test_success")
+
+        monkeypatch.setattr(dc, "backup_workbook", _mock_backup)
+
+        # test backup with no workbook loaded
+        console_test_session.backup()
+        captured = capsys.readouterr()
+        assert "No Excel workbook is loaded." in captured.out
+        
+        # test backup with workbook loaded
+        console_test_session.excel_workbook = MockWorkbook('test')
+        console_test_session.backup()
+        captured = capsys.readouterr()
+        assert "backup_test_success" in captured.out
+
+
     def test_load_measurement(self, monkeypatch, console_test_session):
         def _mock_select_json():
             return "select_json"
