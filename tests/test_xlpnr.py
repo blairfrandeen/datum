@@ -330,6 +330,7 @@ class TestXL:
 
     def test_update_named_ranges(self, monkeypatch, capsys):
 
+        monkeypatch.setattr(xlpnr, "load_metadata_from_json", lambda _: None)
         # Test for source dict as argument
         monkeypatch.setattr(
             xlpnr, "get_workbook_key_value_pairs", self._mock_target_dict
