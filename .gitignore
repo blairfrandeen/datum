@@ -8,6 +8,9 @@
 !tests/xl/*.xlsx
 tests/xl/*_BACKUP.xlsx
 
+# Exclude any database files
+*.db
+
 # Exclude dev environment
 /py37
 /venv
