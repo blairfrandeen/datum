@@ -19,14 +19,25 @@ from tkinter import TclError
 import NXOpen
 from nxmods import nxprint
 
-# TODO: Write a session wrapper that carries around the listing window.
-# Change nxprint to be a method of the session so that the LW only
-# has to be opened once.
-
 # user settable defaults for where to save JSON file
-JSON_DEFAULT_DIR = f"C:\\Users\\{os.getlogin()}\\Documents\\datum"
+DATUM_DIR = f"C:\\Users\\{os.getlogin()}\\Documents\\datum"
 JSON_DEFAULT_FILE = "nx_measurements.json"
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+sys.path.insert(0, DATUM_DIR)
+
+# ATTEMPT TO IMPORT OTHER MODULES - IN PROGRESS
+# FAILS WHEN IT LOOKS FOR 'pywintypes'
+# sys.path.insert(0, f"{DATUM_DIR}\\venv\\Lib\\site-packages")
+# sys.exec_prefix = f"{DATUM_DIR}\\venv"
+# nxprint(f"{sys.exec_prefix = }")
+# import xlwings as xw
+
+try:
+    from datum import __version__ as datum_version
+except ModuleNotFoundError:
+    nxprint('datum module not found.')
+    datum_version = 'UNKNOWN'
 
 
 def get_metadata(nxSession):
@@ -43,6 +54,8 @@ def get_metadata(nxSession):
     metadata["retrieval_date"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
     metadata["user"] = os.getlogin()
     metadata["computer"] = os.environ["COMPUTERNAME"]
+    metadata["datum_version"] = datum_version
+    metadata["NX_version"] = nxSession.ReleaseNumber
 
     for key in metadata.keys():
         nxprint(f"{key}: {metadata[key]}")
@@ -186,7 +199,7 @@ def get_json_file_path():
         root.withdraw()
         file_path = filedialog.asksaveasfilename(
             defaultextension=".json",
-            initialdir=JSON_DEFAULT_DIR,
+            initialdir=DATUM_DIR,
             initialfile=JSON_DEFAULT_FILE,
             title="Choose JSON file for measurement export",
         )
@@ -202,7 +215,7 @@ def get_json_file_path():
         nxprint(error)
         nxprint("Invalid TCL installation, using default JSON path.")
 
-    return f"{JSON_DEFAULT_DIR}\\{JSON_DEFAULT_FILE}"
+    return f"{DATUM_DIR}\\{JSON_DEFAULT_FILE}"
 
 
 def main():
