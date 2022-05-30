@@ -8,14 +8,23 @@ the first time this is used.
 
 xlwings requires that Excel be open in order to run this code.
 """
+
+# USER DEFINED PARAMETERS
+DATUM_DB = "datum.db"       # SQLite database file
+BACKUP_DEFAULT = "."        # Default dir to for Excel backups
+PREVIEW_MIN_DIFF = 0.0001   # Minimum difference fraction for preview of changes
+PREVEIW_NA_STRING = "-"     # String to display when no comparison available
+
 import datetime
 import json
 import logging
 import logging.config
+import sqlite3
 from pathlib import Path
 from typing import List, Optional, Union
 
 import xlwings as xw
+from yaml import load
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
@@ -26,7 +35,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 ########################
 
 
-def backup_workbook(workbook: xw.main.Book, backup_dir: str = ".") -> Path:
+def backup_workbook(workbook: xw.main.Book, backup_dir: str =BACKUP_DEFAULT) -> Path:
     """Create a backup copy of the workbook.
     Returns the path of the backup copy."""
     # TODO: Make more robust naming convention
@@ -276,6 +285,7 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
             continue
 
         # replace spaces with underscores - no spaces allowed in excel range names
+        # TODO: Ensure all measurement names possible in NX are valid in Excel
         measurement_name: str = measurement["name"].replace(" ", "_")
         for expr in measurement["expressions"]:
             if not check_dict_keys(expr, ["name", "type", "value"]):
@@ -304,7 +314,7 @@ def get_json_key_value_pairs(json_file: str) -> Optional[dict]:
 
 
 def preview_named_range_update(
-    existing_values: dict, new_values: dict, min_diff: float = 0.001
+    existing_values: dict, new_values: dict, min_diff: float = PREVIEW_MIN_DIFF
 ) -> None:
     """Print out list of values that will be overwritten."""
     column_widths = [36, 17, 17, 17]
@@ -347,7 +357,7 @@ def preview_named_range_update(
 
 
 def print_columns(
-    widths: list, values: list, decimals: int = 3, na_string: str = "-"
+    widths: list, values: list, decimals: int = 3, na_string: str = PREVEIW_NA_STRING
 ) -> None:
     if len(widths) != len(values):
         raise IndexError("Mismatch of columns & values.")
@@ -446,8 +456,66 @@ def update_named_ranges(
     write_named_ranges(
         range_undo_buffer, range_update_buffer, target, source_str, backup
     )
+    # TODO: Test coverage; handle writing parameters if no metadata available
+    if source_str != "UNDO BUFFER":
+        write_database_parameters(range_update_buffer, load_metadata_from_json(source))
 
     return range_undo_buffer
+
+
+def write_database_parameters( # NOTE NOT YET IMPLEMENTED
+    parameter_dict: dict,
+    metadata_dict: dict,
+    test_flag = False,
+    ) -> None:
+    """Write values from a dictionary of key-value pairs to an SQLite database."""
+    db_connection = sqlite3.connect(DATUM_DB, detect_types=sqlite3.PARSE_DECLTYPES)
+    cur = db_connection.cursor()
+    
+    # Table for metadata
+    # TODO: Implement this
+    metadata_table_create = ("""--sql
+        CREATE TABLE IF NOT EXISTS source_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_filename TEXT,
+            source_path TEXT,
+            source_rev TEXT,
+            user TEXT,
+            computer TEXT,
+            datum_version TEXT,
+            source_version TEXT,
+            generate_time TIMESTAMP /* timestamp for source generation */
+            access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP /* timestamp for source access */
+        )
+    """)
+
+    # Table for parameters
+    parameter_table_create = ("""--sql
+        CREATE TABLE IF NOT EXISTS parameters(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            param_key TEXT,
+            param_value NUMERIC,
+            generation_time TIMESTAMP /* time measurement was made */
+        )
+    """)
+    cur.execute(parameter_table_create)
+
+    generation_time = datetime.datetime.fromisoformat(metadata_dict['retrieval_date'])
+
+    # Write all parameters to database
+    for key, value in parameter_dict.items():
+        if not isinstance(value, (int, float, str, datetime.datetime)):
+            logger.warning(f"Dict with type {type(value)} attempting to write to {DATUM_DB}. {value = }")
+            value = str(value)
+        insert_command = ("""--sql
+            INSERT INTO parameters (param_key, param_value, generation_time) VALUES (?, ?, ?)
+            """)
+        cur.execute(insert_command, [key, value, generation_time])
+
+    logger.info(f"Successfully wrote {len(parameter_dict)} items to {DATUM_DB}")
+    if not test_flag: #  pragma: no cover
+        db_connection.commit()
+        db_connection.close()
 
 
 def write_named_ranges(
