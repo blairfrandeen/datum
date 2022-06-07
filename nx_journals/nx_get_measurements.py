@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import sqlite3
 from tkinter import TclError
 
 import NXOpen
@@ -21,10 +22,49 @@ from nxmods import nxprint
 
 # user settable defaults for where to save JSON file
 DATUM_DIR = f"C:\\Users\\{os.getlogin()}\\Documents\\datum"
+DATUM_DB_FILE = f"C:\\Users\\{os.getlogin()}\\Documents\\datum\\datum.db"
 JSON_DEFAULT_FILE = "nx_measurements.json"
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 sys.path.insert(0, DATUM_DIR)
+
+def write_metadata_db(metadata_dict):
+    db_connection = sqlite3.connect(DATUM_DB_FILE, detect_types = sqlite3.PARSE_DECLTYPES)
+    cur = db_connection.cursor()
+    metadata_table_create = ("""--sql
+        CREATE TABLE IF NOT EXISTS source_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            part_name TEXT,
+            part_path TEXT,
+            part_rev TEXT,
+            part_units TEXT,
+            user TEXT,
+            computer TEXT,
+            datum_version TEXT,
+            source_type TEXT,
+            source_version TEXT,
+            retrieval_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP /* timestamp for source access */
+        )
+    """)
+
+    cur.execute(metadata_table_create)
+
+    key_str = ', '.join([key for key in metadata_dict.keys()])
+    value_str = '"' + '", "'.join(value for value in metadata_dict.values()) + '"'
+    insert_command = "INSERT INTO source_history (" + key_str + ") VALUES (" + value_str + ")"
+    nxprint(insert_command)
+    cur.execute(insert_command)
+    get_last_key = ("""--sql
+        SELECT MAX(id) FROM source_history 
+    """)
+    cur.execute(get_last_key)
+    last_key = cur.fetchone()[0]
+    nxprint(f"{last_key = }")
+
+    db_connection.commit()
+    db_connection.close()
+
+    return None
 
 # ATTEMPT TO IMPORT OTHER MODULES - IN PROGRESS
 # FAILS WHEN IT LOOKS FOR 'pywintypes'
@@ -48,14 +88,15 @@ def get_metadata(nxSession):
         metadata["part_name"], metadata["part_rev"] = workPart.FullPath.split("/")
     else:
         metadata["part_name"] = workPart.Name
-        metadata["part_path"] = workPart.FullPath
         metadata["part_rev"] = None
+    metadata["part_path"] = workPart.FullPath
     metadata["part_units"] = UNIT_ENUM[int(str(workPart.PartUnits))]
-    metadata["retrieval_date"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
+    metadata["retrieval_ts"] = datetime.datetime.today().strftime(DATETIME_FORMAT)
     metadata["user"] = os.getlogin()
     metadata["computer"] = os.environ["COMPUTERNAME"]
     metadata["datum_version"] = datum_version
-    metadata["NX_version"] = nxSession.ReleaseNumber
+    metadata["source_type"] = 'NX'
+    metadata["source_version"] = str(nxSession.ReleaseNumber)
 
     for key in metadata.keys():
         nxprint(f"{key}: {metadata[key]}")
@@ -185,6 +226,7 @@ def export_measurements(json_export_file, nxSession=None):
         measurement_features.update(get_metadata(nxSession))
         json.dump(measurement_features, json_file, indent=4)
 
+    write_metadata_db(get_metadata(nxSession)['METADATA'])
     return num_measurements_found
 
 
