@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import xlwings as xw
-from yaml import load
 
 # logging set-up
 logging.config.fileConfig("logging.conf")
