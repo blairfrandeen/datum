@@ -119,6 +119,9 @@ def export_measurements(json_export_file, nxSession=None):
     measurement_features["measurements"].append(get_WCS(nxSession))
 
     for feature in workPart.Features:
+        if feature.Suppressed:
+            nxprint(f"Feature {feature.Name} is suppressed.")
+            continue
         if "MEASUREMENT" in feature.FeatureType:
             num_measurements_found += 1
             point_count = 0
