@@ -17,8 +17,24 @@ import sys
 import sqlite3
 from tkinter import TclError
 
-import NXOpen
-from nxmods import nxprint
+try:
+    import NXOpen
+except ModuleNotFoundError as err:
+    NXOpen = type(sys)("NXOpen")
+    sys.modules["NXOpen"] = NXOpen
+    print(err)
+    print("Please run this module from NX.")
+
+try:
+    from nxmods import nxprint
+except ModuleNotFoundError:
+    from nx_journals.nxmods import nxprint
+
+try:
+    from datum import __version__ as datum_version
+except ModuleNotFoundError:
+    nxprint("datum module not found.")
+    datum_version = "UNKNOWN"
 
 # user settable defaults for where to save JSON file
 DATUM_DIR = f"C:\\Users\\{os.getlogin()}\\Documents\\datum"
@@ -78,12 +94,6 @@ def write_metadata_db(metadata_dict: dict) -> None:
 # sys.exec_prefix = f"{DATUM_DIR}\\venv"
 # nxprint(f"{sys.exec_prefix = }")
 # import xlwings as xw
-
-try:
-    from datum import __version__ as datum_version
-except ModuleNotFoundError:
-    nxprint("datum module not found.")
-    datum_version = "UNKNOWN"
 
 
 def get_metadata(nxSession) -> dict:
