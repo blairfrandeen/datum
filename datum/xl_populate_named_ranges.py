@@ -476,15 +476,16 @@ def write_database_parameters(  # NOTE NOT YET IMPLEMENTED
     metadata_table_create = """--sql
         CREATE TABLE IF NOT EXISTS source_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source_filename TEXT,
-            source_path TEXT,
-            source_rev TEXT,
+            part_name TEXT,
+            part_path TEXT,
+            part_rev TEXT,
+            part_units TEXT,
             user TEXT,
             computer TEXT,
             datum_version TEXT,
+            source_type TEXT,
             source_version TEXT,
-            generate_time TIMESTAMP /* timestamp for source generation */
-            access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP /* timestamp for source access */
+            retrieval_ts TIMESTAMP /* timestamp for source generation */
         )
     """
 
@@ -499,7 +500,7 @@ def write_database_parameters(  # NOTE NOT YET IMPLEMENTED
     """
     cur.execute(parameter_table_create)
 
-    generation_time = datetime.datetime.fromisoformat(metadata_dict["retrieval_date"])
+    generation_time = datetime.datetime.fromisoformat(metadata_dict["retrieval_ts"])
 
     # Write all parameters to database
     for key, value in parameter_dict.items():
