@@ -19,9 +19,7 @@ from tkinter import TclError
 
 try:
     import NXOpen
-except ModuleNotFoundError as err:
-    NXOpen = type(sys)("NXOpen")
-    sys.modules["NXOpen"] = NXOpen
+except ModuleNotFoundError as err:  # pragma: no cover
     print(err)
     print("Please run this module from NX.")
 
@@ -32,7 +30,7 @@ except ModuleNotFoundError:
 
 try:
     from datum import __version__ as datum_version
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover
     nxprint("datum module not found.")
     datum_version = "UNKNOWN"
 
@@ -45,6 +43,7 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 sys.path.insert(0, DATUM_DIR)
 
 
+# TODO: Test case in test_db
 def write_metadata_db(metadata_dict: dict) -> None:
     """Write metadata to an SQLite DB"""
     db_connection = sqlite3.connect(DATUM_DB_FILE, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -132,7 +131,8 @@ def find_feature_by_name(feature_name):
     return None
 
 
-def check_feature_errors(nxSession=None):
+# NOTE: NOT IMPLEMENTED
+def check_feature_errors(nxSession=None):  # pragma: no cover
     feature_update_status = nxSession.Parts.Work.FeatureUpdateStatus
     print(feature_update_status)
     print(feature_update_status.Feature.Name)
@@ -159,17 +159,15 @@ def get_WCS(nxSession):
     return wcs
 
 
-def export_measurements(json_export_file, nxSession=None):
+def export_measurements(json_export_file, nxSession):
     #   Ensure that measruements are updated in the model
     #   Menu: Tools->Update->Interpart Update->Update All
-    if nxSession:
-        # TODO: Error handling if no NX session passed to function??
-        markId2 = nxSession.SetUndoMark(
-            NXOpen.Session.MarkVisibility.Visible, "Update Session"
-        )
-        # TODO: Error handling of NXOpen.NXException / Update Undo happens
-        nxSession.UpdateManager.DoInterpartUpdate(markId2)
-        workPart = nxSession.Parts.Work
+    markId2 = nxSession.SetUndoMark(
+        NXOpen.Session.MarkVisibility.Visible, "Update Session"
+    )
+    # TODO: Error handling of NXOpen.NXException / Update Undo happens
+    nxSession.UpdateManager.DoInterpartUpdate(markId2)
+    workPart = nxSession.Parts.Work
 
     # check_feature_errors(nxSession)
     num_measurements_found = 0
