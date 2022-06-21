@@ -26,7 +26,7 @@ METADATA_DICT = {
     "part_path": "C:\\Users\\frandeen\\Documents\\datum\\tests\\nx\\datum_nx_test_measurements.prt",
     "part_rev": None,
     "part_units": "Millimeters",
-    "retrieval_date": "2022-05-08 09:27:57",
+    "retrieval_ts": "2022-05-08 09:27:57",
     "user": "frandeen",
     "computer": "MT-205700"
 }
