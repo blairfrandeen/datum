@@ -5,4 +5,3 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
     def __repr__
-    continue  # @pytest-pass

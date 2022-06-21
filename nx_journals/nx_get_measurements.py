@@ -28,10 +28,13 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 sys.path.insert(0, DATUM_DIR)
 
-def write_metadata_db(metadata_dict):
-    db_connection = sqlite3.connect(DATUM_DB_FILE, detect_types = sqlite3.PARSE_DECLTYPES)
+
+def write_metadata_db(metadata_dict: dict) -> None:
+    """Write metadata to an SQLite DB"""
+    db_connection = sqlite3.connect(DATUM_DB_FILE, detect_types=sqlite3.PARSE_DECLTYPES)
     cur = db_connection.cursor()
-    metadata_table_create = ("""--sql
+    # NOTE: Keys in metadata_dict must match keys in table
+    metadata_table_create = """--sql
         CREATE TABLE IF NOT EXISTS source_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             part_name TEXT,
@@ -45,18 +48,20 @@ def write_metadata_db(metadata_dict):
             source_version TEXT,
             retrieval_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP /* timestamp for source access */
         )
-    """)
+    """
 
     cur.execute(metadata_table_create)
 
-    key_str = ', '.join([key for key in metadata_dict.keys()])
+    key_str = ", ".join([key for key in metadata_dict.keys()])
     value_str = '"' + '", "'.join(value for value in metadata_dict.values()) + '"'
-    insert_command = "INSERT INTO source_history (" + key_str + ") VALUES (" + value_str + ")"
+    insert_command = (
+        "INSERT INTO source_history (" + key_str + ") VALUES (" + value_str + ")"
+    )
     nxprint(insert_command)
     cur.execute(insert_command)
-    get_last_key = ("""--sql
+    get_last_key = """--sql
         SELECT MAX(id) FROM source_history 
-    """)
+    """
     cur.execute(get_last_key)
     last_key = cur.fetchone()[0]
     nxprint(f"{last_key = }")
@@ -65,6 +70,7 @@ def write_metadata_db(metadata_dict):
     db_connection.close()
 
     return None
+
 
 # ATTEMPT TO IMPORT OTHER MODULES - IN PROGRESS
 # FAILS WHEN IT LOOKS FOR 'pywintypes'
@@ -76,11 +82,12 @@ def write_metadata_db(metadata_dict):
 try:
     from datum import __version__ as datum_version
 except ModuleNotFoundError:
-    nxprint('datum module not found.')
-    datum_version = 'UNKNOWN'
+    nxprint("datum module not found.")
+    datum_version = "UNKNOWN"
 
 
-def get_metadata(nxSession):
+def get_metadata(nxSession) -> dict:
+    """Generate metadata dictionary based on work part user parameters."""
     UNIT_ENUM = {0: "Inches", 1: "Millimeters"}
     metadata = dict()
     workPart = nxSession.Parts.Work
@@ -95,7 +102,7 @@ def get_metadata(nxSession):
     metadata["user"] = os.getlogin()
     metadata["computer"] = os.environ["COMPUTERNAME"]
     metadata["datum_version"] = datum_version
-    metadata["source_type"] = 'NX'
+    metadata["source_type"] = "NX"
     metadata["source_version"] = str(nxSession.ReleaseNumber)
 
     for key in metadata.keys():
@@ -226,7 +233,7 @@ def export_measurements(json_export_file, nxSession=None):
         measurement_features.update(get_metadata(nxSession))
         json.dump(measurement_features, json_file, indent=4)
 
-    write_metadata_db(get_metadata(nxSession)['METADATA'])
+    write_metadata_db(get_metadata(nxSession)["METADATA"])
     return num_measurements_found
 
 
